@@ -42,7 +42,7 @@ struct Stop
 
 struct Region
 {
-    std::string name;
+    RegionID name;
     std::vector<RegionID> subregions;
     std::vector<StopID> stops;
 };
@@ -182,7 +182,7 @@ private:
     // Add stuff needed for your class implementation here
     std::map<StopID, Stop> stops_map_ = {};
     std::map<RegionID, Region> regions_map_ = {};
-    bool checkID(std::map<StopID, Stop> m, StopID id);
+    bool checkStop(std::map<StopID, Stop> m, StopID id);
     bool checkRegion(std::map<RegionID, Region> m, RegionID id);
     std::unordered_map<StopID, Stop> sort_map(std::map<StopID, Stop> m, std::string key);
 

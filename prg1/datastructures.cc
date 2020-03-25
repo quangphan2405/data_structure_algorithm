@@ -184,7 +184,7 @@ std::vector<StopID> Datastructures::find_stops(Name const& name)
 bool Datastructures::change_stop_name(StopID id, const Name& newname)
 {
     // Replace this comment and the line below with your implementation
-    bool exist = checkID(stops_map_, id);
+    bool exist = checkStop(stops_map_, id);
     if (!exist) {
         return false;
     } else {
@@ -196,7 +196,7 @@ bool Datastructures::change_stop_name(StopID id, const Name& newname)
 bool Datastructures::change_stop_coord(StopID id, Coord newcoord)
 {
     // Replace this comment and the line below with your implementation
-    bool exist = checkID(stops_map_, id);
+    bool exist = checkStop(stops_map_, id);
     if (!exist) {
         return false;
     } else {
@@ -246,7 +246,7 @@ std::vector<RegionID> Datastructures::all_regions()
 bool Datastructures::add_stop_to_region(StopID id, RegionID parentid)
 {
     // Replace this comment and the line below with your implementation
-    bool stop_exist = checkID(stops_map_, id);
+    bool stop_exist = checkStop(stops_map_, id);
     bool region_exist = checkRegion(regions_map_, parentid);
     if (!region_exist) {
         return false;
@@ -282,8 +282,26 @@ bool Datastructures::add_subregion_to_region(RegionID id, RegionID parentid)
 std::vector<RegionID> Datastructures::stop_regions(StopID id)
 {
     // Replace this comment and the line below with your implementation
-
-    return {NO_REGION};
+    bool stop_exist = checkStop(stops_map_, id);
+    if (!stop_exist) {
+        return {NO_REGION};
+    }
+    regions_vec v = {};
+    RegionID direct_region = "";
+    for (region element : regions_map_) {
+        stops_vec cur_stops = element.second.stops;
+        if (std::find(cur_stops.begin(), cur_stops.end(), id) != cur_stops.end()) {
+            direct_region = element.first;
+            v.push_back(direct_region);
+        }
+    }
+    for (region element : regions_map_) {
+        regions_vec cur_subregions = element.second.subregions;
+        if (std::find(cur_subregions.begin(), cur_subregions.end(), direct_region) != cur_subregions.end()) {
+            v.push_back(element.first);
+        }
+    }
+    return v;
 }
 
 void Datastructures::creation_finished()
@@ -316,7 +334,7 @@ RegionID Datastructures::stops_common_region(StopID id1, StopID id2)
     return NO_REGION;
 }
 
-bool Datastructures::checkID(std::map<StopID, Stop> m, StopID id) {
+bool Datastructures::checkStop(std::map<StopID, Stop> m, StopID id) {
     auto it = std::find_if(m.begin(), m.end(),
                       [id](stop &element){
                             return (element.first == id);
