@@ -21,7 +21,7 @@ Type random_in_range(Type start, Type end)
 
 using stop = std::pair<StopID, Stop>;
 using region = std::pair<RegionID, Region>;
-using return_vec = std::vector<StopID>;
+using stops_vec = std::vector<StopID>;
 
 // Modify the code below to implement the functionality of the class.
 // Also remove comments from the parameter names when you implement
@@ -121,7 +121,7 @@ std::vector<StopID> Datastructures::stops_alphabetically()
     }
 
     std::unordered_map<StopID, Stop> alp_stops_map = sort_map(stops_map_, "name");
-    return_vec v = {};
+    stops_vec v = {};
     for (stop element : alp_stops_map) {
         v.push_back(element.first);
     }
@@ -136,7 +136,7 @@ std::vector<StopID> Datastructures::stops_coord_order()
     }
 
     std::unordered_map<StopID, Stop> coord_stops_map = sort_map(stops_map_, "coord");
-    return_vec v = {};
+    stops_vec v = {};
     for (stop element : coord_stops_map) {
         v.push_back(element.first);
     }
@@ -167,7 +167,7 @@ StopID Datastructures::max_coord()
 std::vector<StopID> Datastructures::find_stops(Name const& name)
 {
     // Replace this comment and the line below with your implementation
-    return_vec v = {};
+    stops_vec v = {};
     for (stop element : stops_map_) {
         if (element.second.name == name) {
             v.push_back(element.first);
@@ -245,13 +245,37 @@ std::vector<RegionID> Datastructures::all_regions()
 bool Datastructures::add_stop_to_region(StopID id, RegionID parentid)
 {
     // Replace this comment and the line below with your implementation
-    return false;
+    bool stop_exist = checkID(stops_map_, id);
+    bool region_exist = checkRegion(regions_map_, parentid);
+    if (!region_exist) {
+        return false;
+    }
+    stops_vec cur_stops = regions_map_[parentid].stops;
+    if (!stop_exist ||
+        (std::find(cur_stops.begin(), cur_stops.end(), id) != cur_stops.end())) {
+        return false;
+    } else {
+        regions_map_[parentid].stops.push_back(id);
+        return true;
+    }
 }
 
 bool Datastructures::add_subregion_to_region(RegionID id, RegionID parentid)
 {
     // Replace this comment and the line below with your implementation
-    return false;
+    bool parent_exist = checkRegion(regions_map_, parentid);
+    bool region_exist = checkRegion(regions_map_, id);
+    if (!parent_exist) {
+        return false;
+    }
+    std::vector<RegionID> cur_subregions = regions_map_[parentid].subregions;
+    if (!region_exist ||
+        (std::find(cur_subregions.begin(), cur_subregions.end(), id) != cur_subregions.end())) {
+        return false;
+    } else {
+        regions_map_[parentid].subregions.push_back(id);
+        return true;
+    }
 }
 
 std::vector<RegionID> Datastructures::stop_regions(StopID id)
