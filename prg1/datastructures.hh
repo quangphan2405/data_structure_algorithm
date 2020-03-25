@@ -7,6 +7,7 @@
 #include <vector>
 #include <utility>
 #include <limits>
+#include <map>
 
 // Types for IDs
 using StopID = long int;
@@ -28,6 +29,18 @@ struct Coord
 {
     int x = NO_VALUE;
     int y = NO_VALUE;
+};
+
+struct Stop
+{
+    std::string name;
+    Coord coord;
+};
+
+struct Region
+{
+    std::vector<RegionID> subregions;
+    std::vector<StopID> stops;
 };
 
 // Example: Defining == and hash function for Coord so that it can be used
@@ -160,6 +173,8 @@ public:
 
 private:
     // Add stuff needed for your class implementation here
+    std::map<StopID, Stop> stops_map = {};
+    std::map<RegionID, Region> regions_map = {};
 
 };
 
