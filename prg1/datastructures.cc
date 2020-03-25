@@ -37,7 +37,11 @@ Datastructures::~Datastructures()
 int Datastructures::stop_count()
 {
     // Replace this comment and the line below with your implementation
-    return NO_VALUE;
+    if (stops_map.size() > 0) {
+        return int(stops_map.size());
+    } else {
+        return NO_VALUE;
+    }
 }
 
 void Datastructures::clear_all()
@@ -48,7 +52,14 @@ void Datastructures::clear_all()
 std::vector<StopID> Datastructures::all_stops()
 {
     // Replace this comment and the line below with your implementation
-    return {NO_STOP};
+    if (stops_map.size() > 0) {
+        return {NO_STOP};
+    }
+    std::vector<StopID> v = {};
+    for (auto [key, value] : stops_map) {
+        v.push_back(key);
+    }
+    return v;
 }
 
 bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
