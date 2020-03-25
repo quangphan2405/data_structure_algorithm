@@ -290,14 +290,16 @@ std::vector<RegionID> Datastructures::stop_regions(StopID id)
     RegionID direct_region = "";
     for (region element : regions_map_) {
         stops_vec cur_stops = element.second.stops;
-        if (std::find(cur_stops.begin(), cur_stops.end(), id) != cur_stops.end()) {
+        if (std::find(cur_stops.begin(), cur_stops.end(),
+                      id) != cur_stops.end()) {
             direct_region = element.first;
             v.push_back(direct_region);
         }
     }
     for (region element : regions_map_) {
         regions_vec cur_subregions = element.second.subregions;
-        if (std::find(cur_subregions.begin(), cur_subregions.end(), direct_region) != cur_subregions.end()) {
+        if (std::find(cur_subregions.begin(), cur_subregions.end(),
+                      direct_region) != cur_subregions.end()) {
             v.push_back(element.first);
         }
     }
