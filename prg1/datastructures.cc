@@ -20,6 +20,7 @@ Type random_in_range(Type start, Type end)
 }
 
 using stop = std::pair<StopID, Stop>;
+using region = std::pair<RegionID, Region>;
 using return_vec = std::vector<StopID>;
 
 // Modify the code below to implement the functionality of the class.
@@ -206,7 +207,15 @@ bool Datastructures::change_stop_coord(StopID id, Coord newcoord)
 bool Datastructures::add_region(RegionID id, const Name &name)
 {
     // Replace this comment and the line below with your implementation
-    return false;
+    bool exist = checkRegion(regions_map_, id);
+    if (exist) {
+        return false;
+    } else {
+        regions_map_[id].name = name;
+        regions_map_[id].subregions = {};
+        regions_map_[id].stops = {};
+        return true;
+    }
 }
 
 Name Datastructures::get_region_name(RegionID id)
@@ -272,6 +281,18 @@ RegionID Datastructures::stops_common_region(StopID id1, StopID id2)
 bool Datastructures::checkID(std::map<StopID, Stop> m, StopID id) {
     auto it = std::find_if(m.begin(), m.end(),
                       [id](stop &element){
+                            return (element.first == id);
+                      });
+    if (it != m.end()) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool Datastructures::checkRegion(std::map<RegionID, Region> m, RegionID id) {
+    auto it = std::find_if(m.begin(), m.end(),
+                      [id](region &element){
                             return (element.first == id);
                       });
     if (it != m.end()) {
