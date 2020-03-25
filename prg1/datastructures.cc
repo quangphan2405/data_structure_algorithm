@@ -22,6 +22,7 @@ Type random_in_range(Type start, Type end)
 using stop = std::pair<StopID, Stop>;
 using region = std::pair<RegionID, Region>;
 using stops_vec = std::vector<StopID>;
+using regions_vec = std::vector<RegionID>;
 
 // Modify the code below to implement the functionality of the class.
 // Also remove comments from the parameter names when you implement
@@ -281,6 +282,7 @@ bool Datastructures::add_subregion_to_region(RegionID id, RegionID parentid)
 std::vector<RegionID> Datastructures::stop_regions(StopID id)
 {
     // Replace this comment and the line below with your implementation
+
     return {NO_REGION};
 }
 
