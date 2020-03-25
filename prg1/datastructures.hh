@@ -8,6 +8,9 @@
 #include <utility>
 #include <limits>
 #include <map>
+#include <algorithm>
+#include <unordered_map>
+#include <cmath>
 
 // Types for IDs
 using StopID = long int;
@@ -52,9 +55,12 @@ inline bool operator!=(Coord c1, Coord c2) { return !(c1==c2); } // Not strictly
 // as key for std::map/set
 inline bool operator<(Coord c1, Coord c2)
 {
-    if (c1.y < c2.y) { return true; }
-    else if (c2.y < c1.y) { return false; }
-    else { return c1.x < c2.x; }
+    bool closer = sqrt(pow(c1.x, 2) + pow(c1.y, 2)) < sqrt(pow(c2.x, 2) + pow(c2.y, 2))? true:false;
+    if (closer || (!closer && (c1.y < c2.y))) { return true; }
+    else { return false; }
+//    if (c1.y < c2.y) { return true; }
+//    else if (c2.y < c1.y) { return false; }
+//    else { return c1.x < c2.x; }
 }
 
 // Return value for cases where coordinates were not found
@@ -173,8 +179,10 @@ public:
 
 private:
     // Add stuff needed for your class implementation here
-    std::map<StopID, Stop> stops_map = {};
-    std::map<RegionID, Region> regions_map = {};
+    std::map<StopID, Stop> stops_map_ = {};
+    std::map<RegionID, Region> regions_map_ = {};
+    bool checkID(std::map<StopID, Stop> m, StopID id);
+
 
 };
 
