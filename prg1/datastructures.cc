@@ -64,8 +64,19 @@ std::vector<StopID> Datastructures::all_stops()
 
 bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
 {
-    // Replace this comment and the line below with your implementation
-    return false;
+    // Replace this comment and the line below with your implementation    
+    auto it = std::find_if(stops_map.begin(), stops_map.end(),
+                      [id](std::pair<StopID, Stop> &element){
+                            return (element.first == id);
+                      });
+
+    if (it != stops_map.end()) {
+        return false;
+    } else {
+        Stop new_stop = {name, xy};
+        stops_map[id] = new_stop;
+        return true;
+    }
 }
 
 Name Datastructures::get_stop_name(StopID id)
