@@ -182,6 +182,7 @@ private:
     std::map<StopID, Stop> stops_map_ = {};
     std::map<RegionID, Region> regions_map_ = {};
     bool checkID(std::map<StopID, Stop> m, StopID id);
+    std::unordered_map<StopID, Stop> sort_map(std::map<StopID, Stop> m, std::string key);
 
 
 };

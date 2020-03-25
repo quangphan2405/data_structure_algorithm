@@ -200,6 +200,7 @@ bool Datastructures::change_stop_coord(StopID id, Coord newcoord)
     } else {
         stops_map_[id].coord = newcoord;
         return true;
+    }
 }
 
 bool Datastructures::add_region(RegionID id, const Name &name)
