@@ -56,7 +56,7 @@ void Datastructures::clear_all()
 std::vector<StopID> Datastructures::all_stops()
 {
     // Replace this comment and the line below with your implementation
-    if (stops_map_.size() > 0) {
+    if (stops_map_.size() == 0) {
         return {NO_STOP};
     }
     std::vector<StopID> v = {};
@@ -221,13 +221,25 @@ bool Datastructures::add_region(RegionID id, const Name &name)
 Name Datastructures::get_region_name(RegionID id)
 {
     // Replace this comment and the line below with your implementation
-    return NO_NAME;
+    bool exist = checkRegion(regions_map_, id);
+    if (exist) {
+        return regions_map_[id].name;
+    } else {
+        return NO_NAME;
+    }
 }
 
 std::vector<RegionID> Datastructures::all_regions()
 {
     // Replace this comment and the line below with your implementation
-    return {NO_REGION};
+    if (regions_map_.size() == 0) {
+        return {NO_REGION};
+    }
+    std::vector<RegionID> v = {};
+    for (auto [key, value] : regions_map_) {
+        v.push_back(key);
+    }
+    return v;
 }
 
 bool Datastructures::add_stop_to_region(StopID id, RegionID parentid)
