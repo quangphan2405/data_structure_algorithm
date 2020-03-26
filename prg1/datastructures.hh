@@ -38,11 +38,13 @@ struct Stop
 {
     Name name;
     Coord coord;
+    RegionID *parent;
 };
 
 struct Region
 {
     RegionID name;
+    RegionID *parent;
     std::vector<RegionID> subregions;
     std::vector<StopID> stops;
 };
