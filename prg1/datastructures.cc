@@ -339,7 +339,28 @@ bool Datastructures::remove_stop(StopID id)
 RegionID Datastructures::stops_common_region(StopID id1, StopID id2)
 {
     // Replace this comment and the line below with your implementation
-    return NO_REGION;
+    if (!checkStop(stops_map_, id1) || !checkStop(stops_map_, id2)) {
+        return NO_REGION;
+    }
+    RegionID *dir1 = stops_map_[id1].parent;
+    RegionID *dir2 = stops_map_[id2].parent;
+    if (dir1 == nullptr || dir2 == nullptr) {
+        return NO_REGION;
+    }
+    std::vector<RegionID> parent1 = {*dir1}, parent2 = {*dir2}, common_dir = {};
+    while (dir1 != nullptr && dir2 != nullptr) {
+        parent1.push_back(*regions_map_[*dir1].parent);
+        parent2.push_back(*regions_map_[*dir2].parent);
+        *dir1 = *regions_map_[*dir1].parent;
+        *dir2 = *regions_map_[*dir2].parent;
+    }
+    std::set_intersection(parent1.begin(), parent1.end(), parent2.begin(),
+                          parent2.end(), common_dir.begin());
+    if (common_dir.size() == 0) {
+        return NO_REGION;
+    } else {
+        return *common_dir.begin();
+    }
 }
 
 bool closerCoord(Coord c1, Coord c2, Coord root) {
