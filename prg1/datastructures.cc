@@ -23,6 +23,7 @@ using stop = std::pair<StopID, Stop>;
 using region = std::pair<RegionID, Region>;
 using stops_vec = std::vector<StopID>;
 using regions_vec = std::vector<RegionID>;
+const Coord ROOT = {0, 0};
 
 // Modify the code below to implement the functionality of the class.
 // Also remove comments from the parameter names when you implement
@@ -121,12 +122,8 @@ std::vector<StopID> Datastructures::stops_alphabetically()
         return {NO_STOP};
     }
 
-    std::unordered_map<StopID, Stop> alp_stops_map = sort_map(stops_map_, "name");
-    stops_vec v = {};
-    for (stop element : alp_stops_map) {
-        v.push_back(element.first);
-    }
-    return v;
+    stops_vec alp_stops_vec = sort_vec(stops_map_, "name", ROOT);
+    return alp_stops_vec;
 }
 
 std::vector<StopID> Datastructures::stops_coord_order()
@@ -136,33 +133,23 @@ std::vector<StopID> Datastructures::stops_coord_order()
         return {NO_STOP};
     }
 
-    std::unordered_map<StopID, Stop> coord_stops_map = sort_map(stops_map_, "coord");
-    stops_vec v = {};
-    for (stop element : coord_stops_map) {
-        v.push_back(element.first);
-    }
-    return v;
+    stops_vec coord_stops_vec = sort_vec(stops_map_, "coord", ROOT);
+    return coord_stops_vec;
 }
 
 StopID Datastructures::min_coord()
 {
     // Replace this comment and the line below with your implementation
-    if (stops_map_.size() == 0) {
-        return NO_STOP;
-    }
-    std::unordered_map<StopID, Stop> coord_stops_map = sort_map(stops_map_, "coord");
-    return coord_stops_map.begin()->first;
+    stops_vec coord_stops_vec = stops_coord_order();
+    return *coord_stops_vec.begin();
 
 }
 
 StopID Datastructures::max_coord()
 {
     // Replace this comment and the line below with your implementation
-    if (stops_map_.size() == 0) {
-        return NO_STOP;
-    }
-    std::unordered_map<StopID, Stop> coord_stops_map = sort_map(stops_map_, "coord");
-    return coord_stops_map.end()->first;
+    stops_vec coord_stops_vec = stops_coord_order();
+    return *coord_stops_vec.end();
 }
 
 std::vector<StopID> Datastructures::find_stops(Name const& name)
@@ -289,13 +276,11 @@ std::vector<RegionID> Datastructures::stop_regions(StopID id)
         return {NO_REGION};
     }
     regions_vec v = {};
-    RegionID *direct_region = nullptr;
-    for (stop element : stops_map_) {
-        if (element.first == id) {
-            direct_region = element.second.parent;
-            v.push_back(*direct_region);
-        }
+    RegionID *direct_region = stops_map_[id].parent;
+    if (direct_region == nullptr) {
+        return v;
     }
+    v.push_back(*direct_region);
     RegionID *region_ptr = direct_region;
     while (region_ptr != nullptr) {
         RegionID *cur_region_id = (regions_map_[*region_ptr].parent);
@@ -322,16 +307,33 @@ std::vector<StopID> Datastructures::stops_closest_to(StopID id)
     // Replace this comment and the line below with your implementation
     if (!checkStop(stops_map_, id)) {
         return {NO_STOP};
-    } else {
-
     }
 
+    Stop cur_stop = stops_map_[id];
+    stops_vec closest_id_vec = sort_vec(stops_map_, "coord", cur_stop.coord);
+    stops_vec sub_vec = {};
+    unsigned int length = closest_id_vec.size();
+    if (length < 6) {
+        sub_vec = stops_vec(closest_id_vec.begin() + 1, closest_id_vec.end());
+    } else {
+        sub_vec = stops_vec(closest_id_vec.begin() + 1, closest_id_vec.begin() + 5);
+    }
+    return sub_vec;
 }
 
 bool Datastructures::remove_stop(StopID id)
 {
     // Replace this comment and the line below with your implementation
-    return false;
+    if (!checkStop(stops_map_, id)) {
+        return false;
+    }
+
+    auto stop_it = stops_map_.find(id);
+    auto region_it = regions_map_.find(*stop_it->second.parent);
+    auto pos = std::find(region_it->second.stops.begin(), region_it->second.stops.end(), id);
+    region_it->second.stops.erase(pos);
+    stops_map_.erase(stop_it);
+    return true;
 }
 
 RegionID Datastructures::stops_common_region(StopID id1, StopID id2)
@@ -340,11 +342,15 @@ RegionID Datastructures::stops_common_region(StopID id1, StopID id2)
     return NO_REGION;
 }
 
-bool Datastructures::checkStop(std::map<StopID, Stop> m, StopID id) {
-    auto it = std::find_if(m.begin(), m.end(),
-                      [id](stop &element){
-                            return (element.first == id);
-                      });
+bool closerCoord(Coord c1, Coord c2, Coord root) {
+    bool closer = (pow(c1.x - root.x, 2) + pow(c1.y - root.y, 2))
+                < (pow(c2.x - root.x, 2) + pow(c2.y - root.y, 2))? true:false;
+    if (closer || (!closer && (c1.y - root.y < c2.y - root.y))) { return true; }
+    else { return false; }
+}
+
+bool Datastructures::checkStop(std::unordered_map<StopID, Stop> m, StopID id) {
+    auto it = m.find(id);
     if (it != m.end()) {
         return true;
     } else {
@@ -352,11 +358,8 @@ bool Datastructures::checkStop(std::map<StopID, Stop> m, StopID id) {
     }
 }
 
-bool Datastructures::checkRegion(std::map<RegionID, Region> m, RegionID id) {
-    auto it = std::find_if(m.begin(), m.end(),
-                      [id](region &element){
-                            return (element.first == id);
-                      });
+bool Datastructures::checkRegion(std::unordered_map<RegionID, Region> m, RegionID id) {
+    auto it = m.find(id);
     if (it != m.end()) {
         return true;
     } else {
@@ -364,20 +367,19 @@ bool Datastructures::checkRegion(std::map<RegionID, Region> m, RegionID id) {
     }
 }
 
-std::unordered_map<StopID, Stop> Datastructures::sort_map(std::map<StopID, Stop> m, std::string key) {
-    std::unordered_map<StopID, Stop> alp_stops_map = {};
-    for (auto element : m) {
-        alp_stops_map[element.first] = element.second;
-    }
-    std::sort(alp_stops_map.begin(), alp_stops_map.end(),
-              [key](stop a, stop b) {
+std::vector<StopID> Datastructures::sort_vec(std::unordered_map<StopID, Stop> m, std::string key, Coord root) {
+    std::sort(m.begin(), m.end(),
+              [key, root, this](stop a, stop b) {
         if (key == "name") {
             return (a.second.name < b.second.name);
         } else if (key == "coord") {
-            return (a.second.coord < b.second.coord);
+            bool closer = closerCoord(a.second.coord, b.second.coord, root);
+            return closer;
         } else {
             return true;
         }
     });
-    return alp_stops_map;
+    std::vector<StopID> v = {};
+    std::for_each(m.begin(), m.end(), [v](stop x) mutable { v.push_back(x.first); });
+    return v;
 }

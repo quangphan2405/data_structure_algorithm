@@ -1,4 +1,4 @@
-// Datastructures.hh
+﻿// Datastructures.hh
 
 #ifndef DATASTRUCTURES_HH
 #define DATASTRUCTURES_HH
@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <unordered_map>
 #include <cmath>
+#include <vector>
 
 // Types for IDs
 using StopID = long int;
@@ -43,7 +44,7 @@ struct Stop
 
 struct Region
 {
-    RegionID name;
+    Name name;
     RegionID *parent;
     std::vector<RegionID> subregions;
     std::vector<StopID> stops;
@@ -56,15 +57,12 @@ inline bool operator!=(Coord c1, Coord c2) { return !(c1==c2); } // Not strictly
 
 // Example: Defining < for Coord so that it can be used
 // as key for std::map/set
-inline bool operator<(Coord c1, Coord c2)
-{
-    bool closer = sqrt(pow(c1.x, 2) + pow(c1.y, 2)) < sqrt(pow(c2.x, 2) + pow(c2.y, 2))? true:false;
-    if (closer || (!closer && (c1.y < c2.y))) { return true; }
-    else { return false; }
+//inline bool operator<(Coord c1, Coord c2)
+//{
 //    if (c1.y < c2.y) { return true; }
 //    else if (c2.y < c1.y) { return false; }
 //    else { return c1.x < c2.x; }
-}
+//}
 
 // Return value for cases where coordinates were not found
 Coord const NO_COORD = {NO_VALUE, NO_VALUE};
@@ -182,11 +180,12 @@ public:
 
 private:
     // Add stuff needed for your class implementation here
-    std::map<StopID, Stop> stops_map_ = {};
-    std::map<RegionID, Region> regions_map_ = {};
-    bool checkStop(std::map<StopID, Stop> m, StopID id);
-    bool checkRegion(std::map<RegionID, Region> m, RegionID id);
-    std::unordered_map<StopID, Stop> sort_map(std::map<StopID, Stop> m, std::string key);
+    std::unordered_map<StopID, Stop> stops_map_ = {};
+    std::unordered_map<RegionID, Region> regions_map_ = {};
+    bool closerCoord(Coord c1, Coord c2, Coord root);
+    bool checkStop(std::unordered_map<StopID, Stop> m, StopID id);
+    bool checkRegion(std::unordered_map<RegionID, Region> m, RegionID id);
+    std::vector<StopID> sort_vec(std::unordered_map<StopID, Stop> m, std::string key, Coord root);
 
 
 };
