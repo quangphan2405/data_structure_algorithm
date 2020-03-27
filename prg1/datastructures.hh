@@ -182,9 +182,9 @@ private:
     // Add stuff needed for your class implementation here
     std::unordered_map<StopID, Stop> stops_map_ = {};
     std::unordered_map<RegionID, Region> regions_map_ = {};
-    bool checkStop(std::unordered_map<StopID, Stop> m, StopID id);
-    bool checkRegion(std::unordered_map<RegionID, Region> m, RegionID id);
-    std::unordered_map<StopID, Stop> get_stops_fromRegion(RegionID cur_region_id, std::unordered_map<StopID, Stop> stops);
+    bool checkStop(StopID id);
+    bool checkRegion(RegionID id);
+    void get_stops_fromRegion(Region cur_region, std::vector<StopID> &stops);
     bool sortCoord(Coord c1, Coord c2, Coord root);
     std::vector<StopID> sort_coord(Coord root);
 };

@@ -74,7 +74,7 @@ std::vector<StopID> Datastructures::all_stops()
 bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
 {
     // Replace this comment and the line below with your implementation    
-    if (checkStop(stops_map_, id)) {
+    if (checkStop(id)) {
         return false;
     } else {
         Stop new_stop = {name, xy, nullptr};
@@ -86,7 +86,7 @@ bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
 Name Datastructures::get_stop_name(StopID id)
 {
     // Replace this comment and the line below with your implementation
-    if (!checkStop(stops_map_, id)) {
+    if (!checkStop(id)) {
         return NO_NAME;
     } else {
         return stops_map_[id].name;
@@ -96,7 +96,7 @@ Name Datastructures::get_stop_name(StopID id)
 Coord Datastructures::get_stop_coord(StopID id)
 {
     // Replace this comment and the line below with your implementation
-    if (!checkStop(stops_map_, id)) {
+    if (!checkStop(id)) {
         return NO_COORD;
     } else {
         return stops_map_[id].coord;
@@ -138,7 +138,7 @@ StopID Datastructures::min_coord()
     // Replace this comment and the line below with your implementation
     stops_vec coord_stops_vec = stops_coord_order();
     if (coord_stops_vec.empty()) {
-        return {NO_STOP};
+        return NO_STOP;
     } else {
         return coord_stops_vec.front();
     }
@@ -149,7 +149,7 @@ StopID Datastructures::max_coord()
     // Replace this comment and the line below with your implementation
     stops_vec coord_stops_vec = stops_coord_order();
     if (coord_stops_vec.empty()) {
-        return {NO_STOP};
+        return NO_STOP;
     } else {
         return coord_stops_vec.back();
     }
@@ -174,7 +174,7 @@ std::vector<StopID> Datastructures::find_stops(Name const& name)
 bool Datastructures::change_stop_name(StopID id, const Name& newname)
 {
     // Replace this comment and the line below with your implementation
-    if (!checkStop(stops_map_, id)) {
+    if (!checkStop(id)) {
         return false;
     } else {
         stops_map_[id].name = newname;
@@ -185,7 +185,7 @@ bool Datastructures::change_stop_name(StopID id, const Name& newname)
 bool Datastructures::change_stop_coord(StopID id, Coord newcoord)
 {
     // Replace this comment and the line below with your implementation
-    if (!checkStop(stops_map_, id)) {
+    if (!checkStop(id)) {
         return false;
     } else {
         stops_map_[id].coord = newcoord;
@@ -196,7 +196,7 @@ bool Datastructures::change_stop_coord(StopID id, Coord newcoord)
 bool Datastructures::add_region(RegionID id, const Name &name)
 {
     // Replace this comment and the line below with your implementation
-    if (checkRegion(regions_map_, id)) {
+    if (checkRegion(id)) {
         return false;
     } else {
         regions_map_[id].name = name;
@@ -210,7 +210,7 @@ bool Datastructures::add_region(RegionID id, const Name &name)
 Name Datastructures::get_region_name(RegionID id)
 {
     // Replace this comment and the line below with your implementation
-    if (!checkRegion(regions_map_, id)) {
+    if (!checkRegion(id)) {
         return NO_NAME;
     } else {
         return regions_map_[id].name;
@@ -233,11 +233,11 @@ std::vector<RegionID> Datastructures::all_regions()
 bool Datastructures::add_stop_to_region(StopID id, RegionID parentid)
 {
     // Replace this comment and the line below with your implementation
-    if (!checkRegion(regions_map_, parentid)) {
+    if (!checkRegion(parentid)) {
         return false;
     }
     stops_vec cur_stops = regions_map_[parentid].stops;
-    if (!checkStop(stops_map_, id) ||
+    if (!checkStop(id) ||
         (std::find(cur_stops.begin(), cur_stops.end(), id) != cur_stops.end())) {
         return false;
     } else {
@@ -250,11 +250,11 @@ bool Datastructures::add_stop_to_region(StopID id, RegionID parentid)
 bool Datastructures::add_subregion_to_region(RegionID id, RegionID parentid)
 {
     // Replace this comment and the line below with your implementation
-    if (!checkRegion(regions_map_, parentid)) {
+    if (!checkRegion(parentid)) {
         return false;
     }
     std::vector<RegionID> cur_subregions = regions_map_[parentid].subregions;
-    if (!checkRegion(regions_map_, id) ||
+    if (!checkRegion(id) ||
         (std::find(cur_subregions.begin(), cur_subregions.end(), id) != cur_subregions.end())) {
         return false;
     } else {
@@ -267,7 +267,7 @@ bool Datastructures::add_subregion_to_region(RegionID id, RegionID parentid)
 std::vector<RegionID> Datastructures::stop_regions(StopID id)
 {
     // Replace this comment and the line below with your implementation
-    if (!checkStop(stops_map_, id)) {
+    if (!checkStop(id)) {
         return {NO_REGION};
     }
     regions_vec v = {};
@@ -295,37 +295,45 @@ void Datastructures::creation_finished()
 std::pair<Coord,Coord> Datastructures::region_bounding_box(RegionID id)
 {
     // Replace this comment and the line below with your implementation
-    if (!checkRegion(regions_map_, id)) {
+    if (!checkRegion(id)) {
         return {NO_COORD, NO_COORD};
     }
 
-    std::unordered_map<StopID, Stop> stops = {};
-    stops = get_stops_fromRegion(id, {});
-//    Region cur_region = regions_map_[id];
-//    std::for_each(cur_region.stops.begin(), cur_region.stops.end(),
-//                  [stops, this](StopID x) mutable { stops[x] = stops_map_[x]; });
+    std::vector<StopID> stops = {};
+    get_stops_fromRegion(regions_map_[id], stops);
 
-    stops_vec v = sort_coord(ORIGIN);
-    if (v.empty()) {
+    for (auto &stop : stops) {
+        std::cout << stop << std::endl;
+    }
+
+    if (stops.empty()) {
         return {NO_COORD, NO_COORD};
     } else {
-        return {stops_map_[*v.begin()].coord, stops_map_[*v.end()].coord};
-    }
+        std::vector<int> x_coords = {}, y_coords = {};
+        for (auto &stop_id : stops) {
+            x_coords.push_back(stops_map_[stop_id].coord.x);
+            y_coords.push_back(stops_map_[stop_id].coord.y);
+        }
+        Coord bottom_left = {*std::min_element(x_coords.begin(), x_coords.end()),
+                             *std::min_element(y_coords.begin(), y_coords.end())};
+        Coord top_right = {*std::max_element(x_coords.begin(), x_coords.end()),
+                           *std::max_element(y_coords.begin(), y_coords.end())};
 
+        return {bottom_left, top_right};
+    }
 }
 
 std::vector<StopID> Datastructures::stops_closest_to(StopID id)
 {
     // Replace this comment and the line below with your implementation
-    if (!checkStop(stops_map_, id)) {
+    if (!checkStop(id)) {
         return {NO_STOP};
     }
 
     Stop cur_stop = stops_map_[id];
     stops_vec closest_id_vec = sort_coord(cur_stop.coord);
     stops_vec sub_vec = {};
-    unsigned int length = closest_id_vec.size();
-    if (length < 6) {
+    if (closest_id_vec.size() < 6) {
         sub_vec = stops_vec(closest_id_vec.begin() + 1, closest_id_vec.end());
     } else {
         sub_vec = stops_vec(closest_id_vec.begin() + 1, closest_id_vec.begin() + 6);
@@ -336,7 +344,7 @@ std::vector<StopID> Datastructures::stops_closest_to(StopID id)
 bool Datastructures::remove_stop(StopID id)
 {
     // Replace this comment and the line below with your implementation
-    if (!checkStop(stops_map_, id)) {
+    if (!checkStop(id)) {
         return false;
     }
 
@@ -355,7 +363,7 @@ bool Datastructures::remove_stop(StopID id)
 RegionID Datastructures::stops_common_region(StopID id1, StopID id2)
 {
     // Replace this comment and the line below with your implementation
-    if (!checkStop(stops_map_, id1) || !checkStop(stops_map_, id2)) {
+    if (!checkStop(id1) || !checkStop(id2)) {
         return NO_REGION;
     }
     RegionID *dir1 = stops_map_[id1].parent;
@@ -381,34 +389,33 @@ RegionID Datastructures::stops_common_region(StopID id1, StopID id2)
     }
 }
 
-bool Datastructures::checkStop(std::unordered_map<StopID, Stop> m, StopID id) {
-    auto it = m.find(id);
-    if (it != m.end()) {
+bool Datastructures::checkStop(StopID id) {
+    auto it = stops_map_.find(id);
+    if (it != stops_map_.end()) {
         return true;
     } else {
         return false;
     }
 }
 
-bool Datastructures::checkRegion(std::unordered_map<RegionID, Region> m, RegionID id) {
-    auto it = m.find(id);
-    if (it != m.end()) {
+bool Datastructures::checkRegion(RegionID id) {
+    auto it = regions_map_.find(id);
+    if (it != regions_map_.end()) {
         return true;
     } else {
         return false;
     }
 }
 
-std::unordered_map<StopID, Stop> Datastructures::get_stops_fromRegion(RegionID cur_region_id, std::unordered_map<StopID, Stop> stops) {
-    Region cur_region = regions_map_[cur_region_id];
-    std::unordered_map<StopID, Stop> cur_stops = stops;
-    std::for_each(cur_region.stops.begin(), cur_region.stops.end(),
-                  [stops, this](StopID x) mutable { stops[x] = stops_map_[x]; });
-    if (cur_region.subregions.empty() == 0) {
-        return cur_stops;
+void Datastructures::get_stops_fromRegion(Region cur_region, std::vector<StopID> &stops) {
+    for (auto &stop_id : cur_region.stops) {
+        stops.push_back(stop_id);
     }
-    for (auto it = cur_region.subregions.begin(); it != cur_region.subregions.end(); it++) {
-        get_stops_fromRegion(*it ,cur_stops);
+    if (cur_region.subregions.empty()) {
+        return;
+    }
+    for (auto &subregion_id : cur_region.subregions) {
+        get_stops_fromRegion(regions_map_[subregion_id] , stops);
     }
 }
 
