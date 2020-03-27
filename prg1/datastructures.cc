@@ -5,6 +5,7 @@
 #include <random>
 #include <cmath>
 #include <stdexcept>
+#include <algorithm>
 
 std::minstd_rand rand_engine; // Reasonably quick pseudo-random generator
 
@@ -43,16 +44,18 @@ Datastructures::~Datastructures()
 int Datastructures::stop_count()
 {
     // Replace this comment and the line below with your implementation
-    if (stops_map_.size() > 0) {
-        return int(stops_map_.size());
-    } else {
+    if (stops_map_.empty()) {
         return NO_VALUE;
+    } else {
+        return int(stops_map_.size());
     }
 }
 
 void Datastructures::clear_all()
 {
     // Replace this comment with your implementation
+    stops_map_ = {};
+    regions_map_ = {};
 }
 
 std::vector<StopID> Datastructures::all_stops()
@@ -357,13 +360,6 @@ RegionID Datastructures::stops_common_region(StopID id1, StopID id2)
     }
 }
 
-bool closerCoord(Coord c1, Coord c2, Coord ORIGIN) {
-    bool closer = (pow(c1.x - ORIGIN.x, 2) + pow(c1.y - ORIGIN.y, 2))
-                < (pow(c2.x - ORIGIN.x, 2) + pow(c2.y - ORIGIN.y, 2))? true:false;
-    if (closer || (!closer && (c1.y - ORIGIN.y < c2.y - ORIGIN.y))) { return true; }
-    else { return false; }
-}
-
 bool Datastructures::checkStop(std::unordered_map<StopID, Stop> m, StopID id) {
     auto it = m.find(id);
     if (it != m.end()) {
@@ -395,16 +391,24 @@ std::unordered_map<StopID, Stop> Datastructures::get_stops_fromRegion(RegionID c
     }
 }
 
+bool Datastructures::sortName(std::pair<StopID, Stop> stop1, std::pair<StopID, Stop> stop2) {
+    return (stop1.second.name < stop2.second.name);
+}
+
+bool Datastructures::sortCoord(std::pair<StopID, Stop> stop1, std::pair<StopID, Stop> stop2, Coord root) {
+    bool closer = (pow(stop1.second.coord.x - root.x, 2) + pow(stop1.second.coord.y - root.y, 2))
+                < (pow(stop2.second.coord.x - root.x, 2) + pow(stop2.second.coord.y - root.y, 2))? true:false;
+    if (closer || (!closer && (stop1.second.coord.y - root.y < stop2.second.coord.y - root.y))) { return true; }
+    else { return false; }
+}
+
 std::vector<StopID> Datastructures::sort_map(std::unordered_map<StopID, Stop> m, std::string key, Coord root) {
-    std::sort(m.begin(), m.end(),
-              [key, root, this](stop a, stop b) {
-        if (key == "name") {
-            return (a.second.name < b.second.name);
-        } else {
-            bool closer = closerCoord(a.second.coord, b.second.coord, root);
-            return closer;
-        }
-    });
+    std::vector<std::pair<StopID, Stop>> vec(m.begin(), m.end());
+    if (key == "name") {
+        std::sort(vec.begin(), vec.end(), [](stop stop1, stop stop2) { return (stop1.second.name < stop2.second.name); });
+    } else {
+        std::sort(vec.begin(), vec.end(), [root, this](stop stop1, stop stop2) { return sortCoord(stop1, stop2, root); });
+    }
     stops_vec v = {};
     std::for_each(m.begin(), m.end(), [v](stop x) mutable { v.push_back(x.first); });
     return v;

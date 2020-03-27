@@ -7,7 +7,6 @@
 #include <vector>
 #include <utility>
 #include <limits>
-#include <map>
 #include <algorithm>
 #include <unordered_map>
 #include <cmath>
@@ -182,10 +181,11 @@ private:
     // Add stuff needed for your class implementation here
     std::unordered_map<StopID, Stop> stops_map_ = {};
     std::unordered_map<RegionID, Region> regions_map_ = {};
-    bool closerCoord(Coord c1, Coord c2, Coord root);
     bool checkStop(std::unordered_map<StopID, Stop> m, StopID id);
     bool checkRegion(std::unordered_map<RegionID, Region> m, RegionID id);
     std::unordered_map<StopID, Stop> get_stops_fromRegion(RegionID cur_region_id, std::unordered_map<StopID, Stop> stops);
+    bool sortName(std::pair<StopID, Stop> stop1, std::pair<StopID, Stop> stop2);
+    bool sortCoord(std::pair<StopID, Stop> stop1, std::pair<StopID, Stop> stop2, Coord root);
     std::vector<StopID> sort_map(std::unordered_map<StopID, Stop> m, std::string key, Coord root);
 };
 
