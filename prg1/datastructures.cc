@@ -65,8 +65,8 @@ std::vector<StopID> Datastructures::all_stops()
         return {};
     }
     std::vector<StopID> v = {};
-    for (auto [key, value] : stops_map_) {
-        v.push_back(key);
+    for (auto &pair : stops_map_) {
+        v.push_back(pair.first);
     }
     return v;
 }
@@ -77,7 +77,7 @@ bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
     if (checkStop(id)) {
         return false;
     } else {
-        Stop new_stop = {name, xy, nullptr};
+        Stop new_stop = {name, xy, ""};
         stops_map_[id] = new_stop;
         return true;
     }
@@ -200,7 +200,7 @@ bool Datastructures::add_region(RegionID id, const Name &name)
         return false;
     } else {
         regions_map_[id].name = name;
-        regions_map_[id].parent = nullptr;
+        regions_map_[id].parent = "";
         regions_map_[id].subregions = {};
         regions_map_[id].stops = {};
         return true;
@@ -224,8 +224,8 @@ std::vector<RegionID> Datastructures::all_regions()
         return {};
     }
     regions_vec v = {};
-    for (auto [key, value] : regions_map_) {
-        v.push_back(key);
+    for (auto &pair : regions_map_) {
+        v.push_back(pair.first);
     }
     return v;
 }
@@ -241,7 +241,7 @@ bool Datastructures::add_stop_to_region(StopID id, RegionID parentid)
         (std::find(cur_stops.begin(), cur_stops.end(), id) != cur_stops.end())) {
         return false;
     } else {
-        stops_map_[id].parent = &parentid;
+        stops_map_[id].parent = parentid;
         regions_map_[parentid].stops.push_back(id);
         return true;
     }
@@ -259,7 +259,7 @@ bool Datastructures::add_subregion_to_region(RegionID id, RegionID parentid)
         return false;
     } else {
         regions_map_[parentid].subregions.push_back(id);
-        regions_map_[id].parent = &parentid;
+        regions_map_[id].parent = parentid;
         return true;
     }
 }
@@ -271,17 +271,14 @@ std::vector<RegionID> Datastructures::stop_regions(StopID id)
         return {NO_REGION};
     }
     regions_vec v = {};
-//    RegionID *direct_region = *stops_map_[id].parent;
-    std::cout << *stops_map_[id].parent << std::endl;
-    if (stops_map_[id].parent == nullptr) {
+    RegionID cur_region_id = stops_map_[id].parent;
+    if (cur_region_id == "") {
         return {NO_REGION};
     }
-    v.push_back(*stops_map_[id].parent);
-    RegionID *region_ptr = nullptr;
-    region_ptr = stops_map_[id].parent;
-    while (region_ptr != nullptr) {
-        v.push_back(*regions_map_[*region_ptr].parent);
-        *region_ptr = *regions_map_[*region_ptr].parent;
+    v.push_back(cur_region_id);
+    while (regions_map_[cur_region_id].parent != "") {
+        v.push_back(regions_map_[cur_region_id].parent);
+        cur_region_id = regions_map_[cur_region_id].parent;
     }
     return v;
 }
@@ -301,10 +298,6 @@ std::pair<Coord,Coord> Datastructures::region_bounding_box(RegionID id)
 
     std::vector<StopID> stops = {};
     get_stops_fromRegion(regions_map_[id], stops);
-
-    for (auto &stop : stops) {
-        std::cout << stop << std::endl;
-    }
 
     if (stops.empty()) {
         return {NO_COORD, NO_COORD};
@@ -349,8 +342,8 @@ bool Datastructures::remove_stop(StopID id)
     }
 
     auto stop_it = stops_map_.find(id);
-    if (stop_it->second.parent != nullptr) {
-        auto region_it = regions_map_.find(*stop_it->second.parent);
+    if (stop_it->second.parent != "") {
+        auto region_it = regions_map_.find(stop_it->second.parent);
         if (region_it != regions_map_.end()) {
             auto pos = std::find(region_it->second.stops.begin(), region_it->second.stops.end(), id);
             region_it->second.stops.erase(pos);
@@ -366,26 +359,29 @@ RegionID Datastructures::stops_common_region(StopID id1, StopID id2)
     if (!checkStop(id1) || !checkStop(id2)) {
         return NO_REGION;
     }
-    RegionID *dir1 = stops_map_[id1].parent;
-    RegionID *dir2 = stops_map_[id2].parent;
-    if (dir1 == nullptr || dir2 == nullptr) {
+    RegionID region_id1 = stops_map_[id1].parent;
+    RegionID region_id2 = stops_map_[id2].parent;
+
+    if (region_id1 == "" || region_id2 == "") {
         return NO_REGION;
     }
-    std::vector<RegionID> parent1 = {*dir1}, parent2 = {*dir2}, common_dir = {};
-    while (dir1 != nullptr) {
-        parent1.push_back(*regions_map_[*dir1].parent);        
-        *dir1 = *regions_map_[*dir1].parent;        
+    std::vector<RegionID> parent1 = {region_id1}, parent2 = {region_id2};
+    while (regions_map_[region_id1].parent != "") {
+        parent1.push_back(regions_map_[region_id1].parent);
+        region_id1 = regions_map_[region_id1].parent;
     }
-    while (dir2 != nullptr) {
-        parent2.push_back(*regions_map_[*dir2].parent);
-        *dir2 = *regions_map_[*dir2].parent;
+    while (regions_map_[region_id2].parent != "") {
+        parent2.push_back(regions_map_[region_id2].parent);
+        region_id2 = regions_map_[region_id2].parent;
     }
-    std::set_intersection(parent1.begin(), parent1.end(), parent2.begin(),
-                          parent2.end(), common_dir.begin());
-    if (common_dir.empty()) {
+
+    auto common_dir = std::find_first_of(parent1.begin(), parent1.end(),
+                                         parent2.begin(), parent2.end());
+
+    if (common_dir == parent1.end()) {
         return NO_REGION;
     } else {
-        return *common_dir.begin();
+        return *common_dir;
     }
 }
 
@@ -433,7 +429,7 @@ std::vector<StopID> Datastructures::sort_coord(Coord root) {
     std::vector<std::pair<StopID, Stop>> vec(stops_map_.begin(), stops_map_.end());
     std::sort(vec.begin(), vec.end(), [root, this](stop stop1, stop stop2)
     { return sortCoord(get_stop_coord(stop1.first), get_stop_coord(stop2.first), root); });
-    std::for_each(vec.begin(), vec.end(), [](stop stop3) {std::cout << stop3.first << std::endl; });
+
     stops_vec v = {};
     for (auto &pair : vec) {
         v.push_back(pair.first);

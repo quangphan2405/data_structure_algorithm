@@ -39,13 +39,13 @@ struct Stop
 {
     Name name;
     Coord coord;
-    RegionID *parent;
+    RegionID parent;
 };
 
 struct Region
 {
     Name name;
-    RegionID *parent;
+    RegionID parent;
     std::vector<RegionID> subregions;
     std::vector<StopID> stops;
 };
