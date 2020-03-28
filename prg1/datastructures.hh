@@ -66,6 +66,7 @@ inline bool operator!=(Coord c1, Coord c2) { return !(c1==c2); } // Not strictly
 
 // Return value for cases where coordinates were not found
 Coord const NO_COORD = {NO_VALUE, NO_VALUE};
+Coord const ORIGIN = {0, 0};
 
 
 // This is the class you are supposed to implement
@@ -182,10 +183,11 @@ private:
     // Add stuff needed for your class implementation here
     std::unordered_map<StopID, Stop> stops_map_ = {};
     std::unordered_map<RegionID, Region> regions_map_ = {};
+    std::pair<StopID, Coord> min_coord_ = {NO_STOP, ORIGIN}, max_coord_ = {NO_STOP, ORIGIN};
     bool checkStop(StopID id);
     bool checkRegion(RegionID id);
     void get_stops_fromRegion(Region cur_region, std::vector<StopID> &stops);
-    bool sortCoord(Coord c1, Coord c2, Coord root);
+    bool compCoord(Coord c1, Coord c2, Coord root);
     std::vector<StopID> sort_coord(Coord root);
 };
 
