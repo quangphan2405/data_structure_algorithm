@@ -15,10 +15,9 @@
 #include <map>
 
 // Types for IDs
-using StopID = long int;
-using RegionID = std::string;
-using Name = std::string;
-using name_pair = std::pair<StopID, Name>;
+using StopID    = long int;
+using RegionID  = std::string;
+using Name      = std::string;
 
 // Return values for cases where required thing was not found
 StopID const NO_STOP = -1;
@@ -46,8 +45,8 @@ struct Stop
 
 struct Region
 {
-    Name name;
     RegionID parent;
+    Name name;
     std::vector<RegionID> subregions;
     std::vector<StopID> stops;
 };
@@ -56,15 +55,6 @@ struct Region
 // as key for std::unordered_map/set, if needed
 inline bool operator==(Coord c1, Coord c2) { return c1.x == c2.x && c1.y == c2.y; }
 inline bool operator!=(Coord c1, Coord c2) { return !(c1==c2); } // Not strictly necessary
-
-// Example: Defining < for Coord so that it can be used
-// as key for std::map/set
-//inline bool operator<(Coord c1, Coord c2)
-//{
-//    if (c1.y < c2.y) { return true; }
-//    else if (c2.y < c1.y) { return false; }
-//    else { return c1.x < c2.x; }
-//}
 
 // Return value for cases where coordinates were not found
 Coord const NO_COORD = {NO_VALUE, NO_VALUE};
@@ -79,28 +69,28 @@ public:
     Datastructures();
     ~Datastructures();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(1).
+    // Short rationale for estimate: const time for size() method.
     int stop_count();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n).
+    // Short rationale for estimate: linear in the size of map for clear() method.
     void clear_all();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: traverse through n elements of a map.
     std::vector<StopID> all_stops();
 
     // Estimate of performance:
     // Short rationale for estimate:
     bool add_stop(StopID id, Name const& name, Coord xy);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(log n)
+    // Short rationale for estimate: map [] operator.
     Name get_stop_name(StopID id);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(log n)
+    // Short rationale for estimate: map [] operator.
     Coord get_stop_coord(StopID id);
 
     // We recommend you implement the operations below only after implementing the ones above
@@ -113,50 +103,50 @@ public:
     // Short rationale for estimate:
     std::vector<StopID> stops_coord_order();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(1)
+    // Short rationale for estimate: just return an internal variable.
     StopID min_coord();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(1)
+    // Short rationale for estimate: just return an internal variable.
     StopID max_coord();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: linear search.
     std::vector<StopID> find_stops(Name const& name);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(log n)
+    // Short rationale for estimate: map [] operator.
     bool change_stop_name(StopID id, Name const& newname);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(log n)
+    // Short rationale for estimate: map [] operator.
     bool change_stop_coord(StopID id, Coord newcoord);
 
     // We recommend you implement the operations below only after implementing the ones above
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(log n)
+    // Short rationale for estimate: map [] operator.
     bool add_region(RegionID id, Name const& name);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(log n)
+    // Short rationale for estimate: map [] operator.
     Name get_region_name(RegionID id);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: for loop traversing through n elements.
     std::vector<RegionID> all_regions();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: std::find complexity is at most n.
     bool add_stop_to_region(StopID id, RegionID parentid);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: std::find complexity is at most n.
     bool add_subregion_to_region(RegionID id, RegionID parentid);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: worst case happen when we are going from the leaf to the root.
     std::vector<RegionID> stop_regions(StopID id);
 
     // Non-compulsory operations
@@ -165,32 +155,34 @@ public:
     // Short rationale for estimate:
     void creation_finished();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: get_stops_fromRegion results in n,
+    // same for for loop and std::min(max)_element.
     std::pair<Coord, Coord> region_bounding_box(RegionID id);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n log n)
+    // Short rationale for estimate: std::sort complexity
     std::vector<StopID> stops_closest_to(StopID id);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: std::find complexity.
     bool remove_stop(StopID id);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: at most n for std::find_first_of and two while loops.
     RegionID stops_common_region(StopID id1, StopID id2);
 
 private:
     // Add stuff needed for your class implementation here
     std::unordered_map<StopID, Stop> stops_map_ = {};
     std::unordered_map<RegionID, Region> regions_map_ = {};
-    std::pair<StopID, Coord> min_coord_ = {NO_STOP, ORIGIN}, max_coord_ = {NO_STOP, ORIGIN};
-    bool checkStop(StopID id);
-    bool checkRegion(RegionID id);
-    void get_stops_fromRegion(Region cur_region, std::vector<StopID> &stops);
+    std::multimap<Name, StopID> names_map_ = {};
+    std::pair<StopID, Coord> min_coord_ = {NO_STOP, ORIGIN}, max_coord_ = {NO_STOP, ORIGIN},
+    old_min_ = {NO_STOP, ORIGIN}, old_max_ = {NO_STOP, ORIGIN};
+    bool existStop(StopID id);
+    bool existRegion(RegionID id);
+    void get_stops_fromRegion(Region &cur_region, std::vector<StopID> &stops);
     bool compCoord(Coord c1, Coord c2, Coord root);
-    std::vector<StopID> sort_coord(Coord root);
 };
 
 #endif // DATASTRUCTURES_HH
