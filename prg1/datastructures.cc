@@ -24,7 +24,7 @@ using stop = std::pair<StopID, Stop>;
 using region = std::pair<RegionID, Region>;
 using stops_vec = std::vector<StopID>;
 using regions_vec = std::vector<RegionID>;
-using coord_pair = std::pair<StopID, Coord>;
+using coord_pair = std::pair<Coord, StopID>;
 
 // Modify the code below to implement the functionality of the class.
 // Also remove comments from the parameter names when you implement
@@ -123,16 +123,30 @@ std::vector<StopID> Datastructures::stops_alphabetically()
         return {};
     }
 
-    std::vector<std::pair<StopID, Name>> vec ={};
+    std::vector<name_pair> vec ={};
     for (auto &pair1 : stops_map_) {
         vec.push_back({pair1.first, get_stop_name(pair1.first)});
+//        vec[get_stop_name(pair1.first)] = pair1.first;
     }
-    std::sort(vec.begin(), vec.end());
+    std::sort(vec.begin(), vec.end(), [](name_pair s1, name_pair s2) {
+        if (s1.second == s2.second) {
+            return s1.first < s2.first;
+        }
+        return s1.second < s2.second;
+    });
     stops_vec alp_stops_vec = {};
     for (auto &pair2 : vec) {
         alp_stops_vec.push_back(pair2.first);
     }
     return alp_stops_vec;
+//    std::vector<Name> vec = {};
+//    for (auto &pair : stops_map_) {
+//        vec.push_back(get_stop_name(pair.first));
+//    }
+//    std::sort(vec.begin(), vec.end());
+//    for (auto name : vec) {
+
+//    }
 }
 
 std::vector<StopID> Datastructures::stops_coord_order()
@@ -142,8 +156,18 @@ std::vector<StopID> Datastructures::stops_coord_order()
         return {};
     }
 
-    stops_vec coord_stops_vec = sort_coord(ORIGIN);
-    return coord_stops_vec;
+    std::vector<coord_pair> coords_vec = {};
+    for (auto &pair : stops_map_) {
+        coords_vec.push_back({get_stop_coord(pair.first), pair.first});
+    }
+    std::sort(coords_vec.begin(), coords_vec.end(), [this](coord_pair p1, coord_pair p2)
+    { return compCoord(p1.first, p2.first, ORIGIN); });
+
+    std::vector<StopID> coord_id_vec = {};
+    for (auto &pair : coords_vec) {
+        coord_id_vec.push_back(pair.second);
+    }
+    return coord_id_vec;
 }
 
 StopID Datastructures::min_coord()
@@ -167,12 +191,36 @@ StopID Datastructures::max_coord()
 std::vector<StopID> Datastructures::find_stops(Name const& name)
 {
     // Replace this comment and the line below with your implementation
-    stops_vec v = {};
+    std::vector<std::pair<StopID, Name>> stop_vec = {};
     for (auto &pair : stops_map_) {
-        if (pair.second.name == name) {
-            v.push_back(pair.first);
+        stop_vec.push_back({pair.first, get_stop_name(pair.first)});
+    }
+    std::sort(stop_vec.begin(), stop_vec.end(), [](std::pair<StopID, Name> s1, std::pair<StopID, Name> s2)
+    { return s1.second < s2.second; });
+
+    std::vector<std::pair<StopID, Name>>::iterator l = stop_vec.begin(), r = stop_vec.end() - 1;
+    stops_vec v = {};
+
+    while (true) {
+        if (r < l) {
+            break;
+        }
+        std::vector<std::pair<StopID, Name>>::iterator mid = l + (r - l)/2;
+        if (mid->second == name) {
+            v.push_back(mid->first);
+        } else if (mid->second > name) {
+            r = mid - 1;
+        } else {
+            l = mid + 1;
         }
     }
+
+//    for (auto &pair : stops_map_) {
+//        if (pair.second.name == name) {
+//            v.push_back(pair.first);
+//        }
+//    }
+
     if (v.empty()) {
         return {NO_STOP};
     } else {
@@ -395,8 +443,7 @@ RegionID Datastructures::stops_common_region(StopID id1, StopID id2)
 }
 
 bool Datastructures::checkStop(StopID id) {
-    auto it = stops_map_.find(id);
-    if (it != stops_map_.end()) {
+    if (stops_map_.find(id) != stops_map_.end()) {
         return true;
     } else {
         return false;
@@ -404,8 +451,7 @@ bool Datastructures::checkStop(StopID id) {
 }
 
 bool Datastructures::checkRegion(RegionID id) {
-    auto it = regions_map_.find(id);
-    if (it != regions_map_.end()) {
+    if (regions_map_.find(id) != regions_map_.end()) {
         return true;
     } else {
         return false;

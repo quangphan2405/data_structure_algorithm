@@ -12,11 +12,13 @@
 #include <cmath>
 #include <vector>
 #include <iostream>
+#include <map>
 
 // Types for IDs
 using StopID = long int;
 using RegionID = std::string;
 using Name = std::string;
+using name_pair = std::pair<StopID, Name>;
 
 // Return values for cases where required thing was not found
 StopID const NO_STOP = -1;
