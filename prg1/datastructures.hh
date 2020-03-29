@@ -8,11 +8,11 @@
 #include <utility>
 #include <limits>
 #include <algorithm>
+#include <map>
 #include <unordered_map>
 #include <cmath>
 #include <vector>
 #include <iostream>
-#include <map>
 
 // Types for IDs
 using StopID    = long int;
@@ -177,8 +177,8 @@ private:
     std::unordered_map<StopID, Stop> stops_map_ = {};
     std::unordered_map<RegionID, Region> regions_map_ = {};
     std::multimap<Name, StopID> names_map_ = {};
-    std::pair<StopID, Coord> min_coord_ = {NO_STOP, ORIGIN}, max_coord_ = {NO_STOP, ORIGIN},
-    old_min_ = {NO_STOP, ORIGIN}, old_max_ = {NO_STOP, ORIGIN};
+    std::pair<StopID, Coord> min_coord_ = {NO_STOP, ORIGIN}, max_coord_ = {NO_STOP, ORIGIN};
+    std::pair<StopID, Coord> min_2nd_ = {NO_STOP, ORIGIN}, max_2nd_ = {NO_STOP, ORIGIN};
     bool existStop(StopID id);
     bool existRegion(RegionID id);
     void get_stops_fromRegion(Region &cur_region, std::vector<StopID> &stops);

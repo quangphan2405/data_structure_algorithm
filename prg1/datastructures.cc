@@ -77,21 +77,20 @@ bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
     } else {        
         if (stops_map_.empty()) {
             // Assign max and min to the first stop added.
-            old_min_   = {id, xy};
-            old_max_   = {id, xy};
             min_coord_ = {id, xy};
             max_coord_ = {id, xy};
         } else {
             // Compare current coord and min/max coord. Assign if satisfied.
             if (compCoord(xy, min_coord_.second, ORIGIN)) {
-                old_min_   = min_coord_;
+                min_2nd_   = min_coord_;
                 min_coord_ = {id, xy};
             }
             if (compCoord(max_coord_.second, xy, ORIGIN)) {
-                old_max_   = max_coord_;
+                max_2nd_   = max_coord_;
                 max_coord_ = {id, xy};
             }
         }
+
         // Initially stop does not belong to any region.
         Stop new_stop  = {name, xy, ""};
         stops_map_[id] = new_stop;
@@ -157,8 +156,8 @@ std::vector<StopID> Datastructures::stops_coord_order()
         id_coord_vec.push_back({pair.first, get_stop_coord(pair.first)});
     }
     // Sort the coordinates based on function compCoord.
-    std::sort(id_coord_vec.begin(), id_coord_vec.end(), [this](coord_pair s1, coord_pair s2)
-    { return compCoord(s1.second, s2.second, ORIGIN); });
+    std::sort(id_coord_vec.begin(), id_coord_vec.end(), [this](coord_pair p1, coord_pair p2)
+    { return compCoord(p1.second, p2.second, ORIGIN); });
 
     std::vector<StopID> coord_stops = {};
     for (auto &pair : id_coord_vec) {
@@ -173,16 +172,8 @@ StopID Datastructures::min_coord()
         return NO_STOP;
     }
 
-//    std::vector<int> x_coords = {}, y_coords = {};
-//    for (auto &pair : stops_map_) {
-//        x_coords.push_back(pair.second.coord.x);
-//        y_coords.push_back(pair.second.coord.y);
-//    }
-//    // Get max and min element in x,y vectors using STL algorithm.
-//    Coord min_coord_ = {*std::min_element(x_coords.begin(), x_coords.end()),
-//                        *std::min_element(y_coords.begin(), y_coords.end())};
-
     return min_coord_.first;
+
 }
 
 StopID Datastructures::max_coord()
@@ -190,6 +181,7 @@ StopID Datastructures::max_coord()
     if (stops_map_.empty()) {
         return NO_STOP;
     }
+
     return max_coord_.first;
 }
 
@@ -198,10 +190,16 @@ std::vector<StopID> Datastructures::find_stops(Name const& name)
     stops_vec stops = {};
     // Linear search. I tried to use multimap for this function but it
     // will slow down the performance of the add_stop() drastically.
-    for (auto &pair : stops_map_) {
-        if (get_stop_name(pair.first) == name) {
-            stops.push_back(pair.first);
-        }
+//    for (auto &pair : stops_map_) {
+//        if (get_stop_name(pair.first) == name) {
+//            stops.push_back(pair.first);
+//        }
+//    }
+
+    typedef std::multimap<Name, StopID>::iterator iter;
+    std::pair<iter, iter> iters = names_map_.equal_range(name);
+    for (auto it = iters.first; it != iters.second; it++) {
+        stops.push_back(it->second);
     }
 
     if (stops.empty()) {
@@ -215,7 +213,14 @@ bool Datastructures::change_stop_name(StopID id, const Name& newname)
 {
     if (!existStop(id)) {
         return false;
-    } else {
+    } else {        
+        auto it = std::find_if(names_map_.begin(), names_map_.end(),
+                               [id](std::pair<Name, StopID> pair)
+                               { return pair.second == id; });
+        std::pair<Name, StopID> new_pair = {newname, it->second};
+        names_map_.erase(it);
+        names_map_.insert(new_pair);
+
         stops_map_[id].name = newname;
         return true;
     }
@@ -309,20 +314,20 @@ std::vector<RegionID> Datastructures::stop_regions(StopID id)
         return {NO_REGION};
     }
 
-    regions_vec v = {};
+    regions_vec regions = {};
     RegionID cur_region_id = stops_map_[id].parent;
     // If given stop does not belong to any region.
     if (cur_region_id == "") {
         return {NO_REGION};
     }
-    v.push_back(cur_region_id); // Direct region.
+    regions.push_back(cur_region_id); // Direct region.
 
     // Check for parents of direct region and add if exist.
     while (regions_map_[cur_region_id].parent != "") {
-        v.push_back(regions_map_[cur_region_id].parent);
+        regions.push_back(regions_map_[cur_region_id].parent);
         cur_region_id = regions_map_[cur_region_id].parent;
     }
-    return v;
+    return regions;
 }
 
 void Datastructures::creation_finished()
@@ -351,8 +356,8 @@ std::pair<Coord,Coord> Datastructures::region_bounding_box(RegionID id)
         // Get max and min element in x,y vectors using STL algorithm.
         Coord bottom_left = {*std::min_element(x_coords.begin(), x_coords.end()),
                              *std::min_element(y_coords.begin(), y_coords.end())};
-        Coord top_right = {*std::max_element(x_coords.begin(), x_coords.end()),
-                           *std::max_element(y_coords.begin(), y_coords.end())};
+        Coord top_right   = {*std::max_element(x_coords.begin(), x_coords.end()),
+                             *std::max_element(y_coords.begin(), y_coords.end())};
 
         return {bottom_left, top_right};
     }
@@ -365,9 +370,6 @@ std::vector<StopID> Datastructures::stops_closest_to(StopID id)
     }
 
     Stop cur_stop = stops_map_[id];
-//    std::vector<std::pair<StopID, Stop>> stops(stops_map_.begin(), stops_map_.end());
-//    std::sort(stops.begin(), stops.end(), [cur_stop, this](stop stop1, stop stop2)
-//    { return compCoord(get_stop_coord(stop1.first), get_stop_coord(stop2.first), cur_stop.coord); });
 
     std::vector<std::pair<StopID, Coord>> stops = {};
     for (auto &pair : stops_map_) {
@@ -410,6 +412,10 @@ bool Datastructures::remove_stop(StopID id)
         }
     }
     // Delete the stop in the main container.
+    auto name_it = std::find(names_map_.begin(), names_map_.end(),
+                             [id](std::pair<Name, StopID> pair)
+                             { return pair.second == id; });
+    names_map_.erase(name_it);
     stops_map_.erase(stop_it);
     return true;
 }
