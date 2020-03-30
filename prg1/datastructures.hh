@@ -1,4 +1,10 @@
-﻿// Datastructures.hh
+﻿/*
+Course name : TIE-2010x Data structures and algorithms
+Student ID  : 281249
+Student name: Phan Vu Thien Quang
+Project     : Implement a bus-stop program using suitable datastructure
+*/
+// Datastructures.hh
 
 #ifndef DATASTRUCTURES_HH
 #define DATASTRUCTURES_HH
