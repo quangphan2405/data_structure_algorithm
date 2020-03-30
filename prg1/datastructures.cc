@@ -79,9 +79,10 @@ bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
     } else {        
         // Initially stop does not belong to any region.
         Stop new_stop  = {name, xy, ""};
+        int distance   = xy.x*xy.x + xy.y*xy.y;
         stops_map_[id] = new_stop;
         names_map_.insert({name, id});
-        distance_map_.insert({xy.x*xy.x + xy.y*xy.y, id});
+        distance_map_.insert({distance, id});
         return true;
     }
 }
@@ -202,12 +203,9 @@ bool Datastructures::change_stop_name(StopID id, const Name& newname)
         return false;
     }
 
-    // Change in multimap requires erasing old element and inserting new one.
-    // Since StopId is unique, it can be using as search key here.
-//    auto it = std::find_if(names_map_.begin(), names_map_.end(),
-//                           [id](std::pair<Name, StopID> pair)
-//                           { return pair.second == id; });
     Name oldname = get_stop_name(id);
+    // Look for the stop with given id in names_map_ using equal_range.
+    // Erase the element found and insert new element with "newname".
     auto iters = names_map_.equal_range(oldname);
     for (auto it = iters.first; it != iters.second; it++) {
         if (it->second == id) {
@@ -227,12 +225,9 @@ bool Datastructures::change_stop_coord(StopID id, Coord newcoord)
         return false;
     }
 
+    // Look for the stop with given id in distance_map_ using equal_range.
+    // Erase the element found and insert new element with "newcoord".
     int new_distance = newcoord.x*newcoord.x + newcoord.y*newcoord.y;
-    // Same idea with change_stop_name.
-//    auto it = std::find_if(distance_map_.begin(), distance_map_.end(),
-//                           [id](std::pair<int, StopID> pair)
-//                           { return pair.second == id; });
-//    distance_map_.erase(it);
     Coord old_coord = get_stop_coord(id);
     int old_distance = old_coord.x*old_coord.x + old_coord.y*old_coord.y;
     auto iters = distance_map_.equal_range(old_distance);
@@ -382,7 +377,6 @@ std::vector<StopID> Datastructures::stops_closest_to(StopID id)
     }
 
     Stop cur_stop = stops_map_[id];
-
     // Save the stops to a vector, as map can not be sorted.
     std::vector<coord_pair> stops = {};
     for (auto &pair : stops_map_) {
@@ -427,15 +421,6 @@ bool Datastructures::remove_stop(StopID id)
     }
     // Delete the stop in the containers. Find element in multimap using
     // StopID as search key because of its uniqueness.
-//    auto name_it     = std::find_if(names_map_.begin(), names_map_.end(),
-//                                    [id](std::pair<Name, StopID> pair)
-//                                    { return pair.second == id; });
-//    auto distance_it = std::find_if(distance_map_.begin(), distance_map_.end(),
-//                                    [id](std::pair<int, StopID> pair)
-//                                    { return pair.second == id; });
-
-//    names_map_.erase(name_it);
-//    distance_map_.erase(distance_it);
     Name oldname = get_stop_name(id);
     auto name_iters = names_map_.equal_range(oldname);
     for (auto it = name_iters.first; it != name_iters.second; it++) {

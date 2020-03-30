@@ -85,11 +85,11 @@ public:
     // Short rationale for estimate: map [] operator and multimap::insert() method.
     bool add_stop(StopID id, Name const& name, Coord xy);
 
-    // Estimate of performance: O(log n)
+    // Estimate of performance: O(log n) ~ θ(1)
     // Short rationale for estimate: map [] operator.
     Name get_stop_name(StopID id);
 
-    // Estimate of performance: O(log n)
+    // Estimate of performance: O(log n) ~ θ(1)
     // Short rationale for estimate: map [] operator.
     Coord get_stop_coord(StopID id);
 
@@ -103,27 +103,29 @@ public:
     // Short rationale for estimate: std::sort complexity.
     std::vector<StopID> stops_coord_order();
 
-    // Estimate of performance: O(n) ~ O(1)
+    // Estimate of performance: O(n) ~ θ(1)
     // Short rationale for estimate: Worst case happens RARELY when all stops
     // have the same coordinates.
     StopID min_coord();
 
-    // Estimate of performance: O(n) ~ O(1)
+    // Estimate of performance: O(n) ~ θ(1)
     // Short rationale for estimate: Worst case happens RARELY when all stops
     // have the same coordinates.
     StopID max_coord();
 
-    // Estimate of performance: O(n) ~ O(log n)
+    // Estimate of performance: O(n) ~ θ(log n)
     // Short rationale for estimate: Worst case happens RARELY when all stops
     // have the same name. On average, the complexity of equal_range is O(log n).
     std::vector<StopID> find_stops(Name const& name);
 
-    // Estimate of performance: O(n)
-    // Short rationale for estimate: std::find_if complexity.
+    // Estimate of performance: O(n) ~ θ(1)
+    // Short rationale for estimate: Worst case is n when all stops have same
+    // name but on average it is constant time.
     bool change_stop_name(StopID id, Name const& newname);
 
-    // Estimate of performance: O(n)
-    // Short rationale for estimate: std::find_if complexity.
+    // Estimate of performance: O(n) ~ θ(1)
+    // Short rationale for estimate: Worst case is n when all stops have same
+    // coord but on average, it is constant time.
     bool change_stop_coord(StopID id, Coord newcoord);
 
     // We recommend you implement the operations below only after implementing the ones above
@@ -148,15 +150,15 @@ public:
     // Short rationale for estimate: std::find complexity is at most n.
     bool add_subregion_to_region(RegionID id, RegionID parentid);
 
-    // Estimate of performance: O(n)
+    // Estimate of performance: O(n) ~ θ(1)
     // Short rationale for estimate: Worst case happen RARELY when we are going
     // from the leaf to the root and there are n regions in total.
     std::vector<RegionID> stop_regions(StopID id);
 
     // Non-compulsory operations
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Θ(1)
+    // Short rationale for estimate: left empty.
     void creation_finished();
 
     // Estimate of performance: O(n)
@@ -168,11 +170,12 @@ public:
     // Short rationale for estimate: std::sort complexity.
     std::vector<StopID> stops_closest_to(StopID id);
 
-    // Estimate of performance: O(n)
-    // Short rationale for estimate: std::find_if complexity.
+    // Estimate of performance: O(n) ~ Θ(log n)
+    // Short rationale for estimate: Worst case is n when going from leaf to root,
+    // but on average it is log n for equal_range().
     bool remove_stop(StopID id);
 
-    // Estimate of performance: O(n)
+    // Estimate of performance: O(n) ~ Θ(log n)
     // Short rationale for estimate: at most n for std::find_first_of and two while loops.
     RegionID stops_common_region(StopID id1, StopID id2);
 
