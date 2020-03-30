@@ -81,8 +81,8 @@ public:
     // Short rationale for estimate: traverse through n elements of a map.
     std::vector<StopID> all_stops();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(log n)
+    // Short rationale for estimate: map [] operator and multimap::insert() method.
     bool add_stop(StopID id, Name const& name, Coord xy);
 
     // Estimate of performance: O(log n)
@@ -95,32 +95,35 @@ public:
 
     // We recommend you implement the operations below only after implementing the ones above
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: traverse through n elements of a multimap.
     std::vector<StopID> stops_alphabetically();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n log n)
+    // Short rationale for estimate: std::sort complexity.
     std::vector<StopID> stops_coord_order();
 
-    // Estimate of performance: O(1)
-    // Short rationale for estimate: just return an internal variable.
+    // Estimate of performance: O(n) ~ O(1)
+    // Short rationale for estimate: Worst case happens RARELY when all stops
+    // have the same coordinates.
     StopID min_coord();
 
-    // Estimate of performance: O(1)
-    // Short rationale for estimate: just return an internal variable.
+    // Estimate of performance: O(n) ~ O(1)
+    // Short rationale for estimate: Worst case happens RARELY when all stops
+    // have the same coordinates.
     StopID max_coord();
 
-    // Estimate of performance: O(n)
-    // Short rationale for estimate: linear search.
+    // Estimate of performance: O(n) ~ O(log n)
+    // Short rationale for estimate: Worst case happens RARELY when all stops
+    // have the same name. On average, the complexity of equal_range is O(log n).
     std::vector<StopID> find_stops(Name const& name);
 
-    // Estimate of performance: O(log n)
-    // Short rationale for estimate: map [] operator.
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: std::find_if complexity.
     bool change_stop_name(StopID id, Name const& newname);
 
-    // Estimate of performance: O(log n)
-    // Short rationale for estimate: map [] operator.
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: std::find_if complexity.
     bool change_stop_coord(StopID id, Coord newcoord);
 
     // We recommend you implement the operations below only after implementing the ones above
@@ -134,7 +137,7 @@ public:
     Name get_region_name(RegionID id);
 
     // Estimate of performance: O(n)
-    // Short rationale for estimate: for loop traversing through n elements.
+    // Short rationale for estimate: traverse through n elements of a map.
     std::vector<RegionID> all_regions();
 
     // Estimate of performance: O(n)
@@ -146,7 +149,8 @@ public:
     bool add_subregion_to_region(RegionID id, RegionID parentid);
 
     // Estimate of performance: O(n)
-    // Short rationale for estimate: worst case happen when we are going from the leaf to the root.
+    // Short rationale for estimate: Worst case happen RARELY when we are going
+    // from the leaf to the root and there are n regions in total.
     std::vector<RegionID> stop_regions(StopID id);
 
     // Non-compulsory operations
@@ -157,15 +161,15 @@ public:
 
     // Estimate of performance: O(n)
     // Short rationale for estimate: get_stops_fromRegion results in n,
-    // same for for loop and std::min(max)_element.
+    // same for loops and std::min(max)_element.
     std::pair<Coord, Coord> region_bounding_box(RegionID id);
 
     // Estimate of performance: O(n log n)
-    // Short rationale for estimate: std::sort complexity
+    // Short rationale for estimate: std::sort complexity.
     std::vector<StopID> stops_closest_to(StopID id);
 
     // Estimate of performance: O(n)
-    // Short rationale for estimate: std::find complexity.
+    // Short rationale for estimate: std::find_if complexity.
     bool remove_stop(StopID id);
 
     // Estimate of performance: O(n)
@@ -175,11 +179,10 @@ public:
 private:
     // Add stuff needed for your class implementation here
     std::unordered_map<StopID, Stop> stops_map_ = {};
-    std::unordered_map<RegionID, Region> regions_map_ = {};
     std::multimap<Name, StopID> names_map_ = {};
-    std::pair<StopID, Coord> min_coord_ = {NO_STOP, ORIGIN}, max_coord_ = {NO_STOP, ORIGIN};
-    std::pair<StopID, Coord> min_2nd_ = {NO_STOP, ORIGIN}, max_2nd_ = {NO_STOP, ORIGIN};
-    bool existStop(StopID id);
+    std::multimap<int, StopID> distance_map_ = {};
+    std::unordered_map<RegionID, Region> regions_map_ = {};
+    bool existStop(StopID id);    
     bool existRegion(RegionID id);
     void get_stops_fromRegion(Region &cur_region, std::vector<StopID> &stops);
     bool compCoord(Coord c1, Coord c2, Coord root);

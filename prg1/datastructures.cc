@@ -20,8 +20,6 @@ Type random_in_range(Type start, Type end)
     return static_cast<Type>(start+num);
 }
 
-using stop        = std::pair<StopID, Stop>;
-using region      = std::pair<RegionID, Region>;
 using stops_vec   = std::vector<StopID>;
 using regions_vec = std::vector<RegionID>;
 using name_pair   = std::pair<StopID, Name>;
@@ -34,8 +32,10 @@ using coord_pair  = std::pair<StopID, Coord>;
 
 Datastructures::Datastructures()
 {
-    stops_map_   = {};
-    regions_map_ = {};
+    stops_map_    = {};
+    names_map_    = {};
+    distance_map_ = {};
+    regions_map_  = {};
 }
 
 Datastructures::~Datastructures()
@@ -55,6 +55,8 @@ int Datastructures::stop_count()
 void Datastructures::clear_all()
 {
     stops_map_.clear();
+    names_map_.clear();
+    distance_map_.clear();
     regions_map_.clear();
 }
 
@@ -65,7 +67,7 @@ std::vector<StopID> Datastructures::all_stops()
     }
     std::vector<StopID> stops = {};
     for (auto &pair : stops_map_) {
-        stops.push_back(pair.first);
+        stops.push_back(pair.first); // Get StopIDs.
     }
     return stops;
 }
@@ -75,26 +77,11 @@ bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
     if (existStop(id)) {
         return false;
     } else {        
-        if (stops_map_.empty()) {
-            // Assign max and min to the first stop added.
-            min_coord_ = {id, xy};
-            max_coord_ = {id, xy};
-        } else {
-            // Compare current coord and min/max coord. Assign if satisfied.
-            if (compCoord(xy, min_coord_.second, ORIGIN)) {
-                min_2nd_   = min_coord_;
-                min_coord_ = {id, xy};
-            }
-            if (compCoord(max_coord_.second, xy, ORIGIN)) {
-                max_2nd_   = max_coord_;
-                max_coord_ = {id, xy};
-            }
-        }
-
         // Initially stop does not belong to any region.
         Stop new_stop  = {name, xy, ""};
         stops_map_[id] = new_stop;
         names_map_.insert({name, id});
+        distance_map_.insert({xy.x*xy.x + xy.y*xy.y, id});
         return true;
     }
 }
@@ -119,34 +106,16 @@ Coord Datastructures::get_stop_coord(StopID id)
 
 std::vector<StopID> Datastructures::stops_alphabetically()
 {
-    if (stops_map_.size() == 0) {
-        return {}; // No stop was added.
-    }
-
-    // Copy map to vector as map can not be sorted.
-    std::vector<name_pair> vec ={};
-    for (auto &pair1 : stops_map_) {
-        vec.push_back({pair1.first, get_stop_name(pair1.first)});
-    }
-    // Sort the stops based on their names. If the names are the same,
-    // stop with smaller id comes first.
-    std::sort(vec.begin(), vec.end(), [](name_pair s1, name_pair s2) {
-        if (s1.second == s2.second) {
-            return s1.first < s2.first;
-        }
-        return s1.second < s2.second;
-    });
-
     stops_vec alp_stops = {};
-    for (auto &pair : vec) {
-        alp_stops.push_back(pair.first); // Get StopIDs.
+    for (auto &pair : names_map_) {
+        alp_stops.push_back(pair.second); // Get StopIDs from multimap.
     }
     return alp_stops;
 }
 
 std::vector<StopID> Datastructures::stops_coord_order()
 {
-    if (stops_map_.size() == 0) {
+    if (stops_map_.empty()) {
         return {};
     }
 
@@ -155,11 +124,12 @@ std::vector<StopID> Datastructures::stops_coord_order()
     for (auto &pair : stops_map_) {
         id_coord_vec.push_back({pair.first, get_stop_coord(pair.first)});
     }
-    // Sort the coordinates based on function compCoord.
-    std::sort(id_coord_vec.begin(), id_coord_vec.end(), [this](coord_pair p1, coord_pair p2)
+
+    // Sort the coordinates based on function compCoord wrt ORIGIN.
+    std::sort(id_coord_vec.begin(), id_coord_vec.end(), [this](coord_pair &p1, coord_pair &p2)
     { return compCoord(p1.second, p2.second, ORIGIN); });
 
-    std::vector<StopID> coord_stops = {};
+    stops_vec coord_stops = {};
     for (auto &pair : id_coord_vec) {
         coord_stops.push_back(pair.first);
     }
@@ -172,8 +142,20 @@ StopID Datastructures::min_coord()
         return NO_STOP;
     }
 
-    return min_coord_.first;
-
+    // Take the range of elements which have the same minimum distance,
+    // then find the minimum y-coord among them. Initially, min_y is
+    // assigned with upper limit of integer assuming that no point
+    // reaches the limit.
+    int min_y = std::numeric_limits<int>::max();
+    StopID return_id = NO_STOP;
+    auto iters = distance_map_.equal_range(distance_map_.begin()->first);
+    for (auto it = iters.first; it != iters.second; it++) {
+        if (get_stop_coord(it->second).y < min_y) {
+            min_y = get_stop_coord(it->second).y;
+            return_id = it->second;
+        }
+    }
+    return return_id;
 }
 
 StopID Datastructures::max_coord()
@@ -182,22 +164,27 @@ StopID Datastructures::max_coord()
         return NO_STOP;
     }
 
-    return max_coord_.first;
+    // Take the range of elements which have the same maximum distance,
+    // then find the maximum y-coord among them. Initially, max_y is
+    // assigned with -1 as no coord is negative.
+    int max_y = -1;
+    StopID return_id = NO_STOP;
+    auto iters = distance_map_.equal_range(distance_map_.rbegin()->first);
+    for (auto it = iters.first; it != iters.second; it++) {
+        if (get_stop_coord(it->second).y >= max_y) {
+            max_y = get_stop_coord(it->second).y;
+            return_id = it->second;
+        }
+    }
+    return return_id;
 }
 
 std::vector<StopID> Datastructures::find_stops(Name const& name)
 {
-    stops_vec stops = {};
-    // Linear search. I tried to use multimap for this function but it
-    // will slow down the performance of the add_stop() drastically.
-//    for (auto &pair : stops_map_) {
-//        if (get_stop_name(pair.first) == name) {
-//            stops.push_back(pair.first);
-//        }
-//    }
 
-    typedef std::multimap<Name, StopID>::iterator iter;
-    std::pair<iter, iter> iters = names_map_.equal_range(name);
+    stops_vec stops = {};
+    // Return a range of elements which have the same key "name" using equal_range.
+    auto iters = names_map_.equal_range(name);
     for (auto it = iters.first; it != iters.second; it++) {
         stops.push_back(it->second);
     }
@@ -213,27 +200,52 @@ bool Datastructures::change_stop_name(StopID id, const Name& newname)
 {
     if (!existStop(id)) {
         return false;
-    } else {        
-        auto it = std::find_if(names_map_.begin(), names_map_.end(),
-                               [id](std::pair<Name, StopID> pair)
-                               { return pair.second == id; });
-        std::pair<Name, StopID> new_pair = {newname, it->second};
-        names_map_.erase(it);
-        names_map_.insert(new_pair);
-
-        stops_map_[id].name = newname;
-        return true;
     }
+
+    // Change in multimap requires erasing old element and inserting new one.
+    // Since StopId is unique, it can be using as search key here.
+//    auto it = std::find_if(names_map_.begin(), names_map_.end(),
+//                           [id](std::pair<Name, StopID> pair)
+//                           { return pair.second == id; });
+    Name oldname = get_stop_name(id);
+    auto iters = names_map_.equal_range(oldname);
+    for (auto it = iters.first; it != iters.second; it++) {
+        if (it->second == id) {
+            names_map_.erase(it);
+            break;
+        }
+    }
+    names_map_.insert({newname, id});
+
+    stops_map_[id].name = newname; // Change in main container.
+    return true;
 }
 
 bool Datastructures::change_stop_coord(StopID id, Coord newcoord)
 {
     if (!existStop(id)) {
         return false;
-    } else {
-        stops_map_[id].coord = newcoord;
-        return true;
     }
+
+    int new_distance = newcoord.x*newcoord.x + newcoord.y*newcoord.y;
+    // Same idea with change_stop_name.
+//    auto it = std::find_if(distance_map_.begin(), distance_map_.end(),
+//                           [id](std::pair<int, StopID> pair)
+//                           { return pair.second == id; });
+//    distance_map_.erase(it);
+    Coord old_coord = get_stop_coord(id);
+    int old_distance = old_coord.x*old_coord.x + old_coord.y*old_coord.y;
+    auto iters = distance_map_.equal_range(old_distance);
+    for (auto it = iters.first; it != iters.second; it++) {
+        if (it->second == id) {
+            distance_map_.erase(it);
+            break;
+        }
+    }
+    distance_map_.insert({new_distance, id});
+
+    stops_map_[id].coord = newcoord; // Change in main container.
+    return true;
 }
 
 bool Datastructures::add_region(RegionID id, const Name &name)
@@ -261,7 +273,7 @@ Name Datastructures::get_region_name(RegionID id)
 
 std::vector<RegionID> Datastructures::all_regions()
 {
-    if (regions_map_.size() == 0) {
+    if (regions_map_.empty()) {
         return {};
     }
     regions_vec regions = {};
@@ -371,10 +383,12 @@ std::vector<StopID> Datastructures::stops_closest_to(StopID id)
 
     Stop cur_stop = stops_map_[id];
 
-    std::vector<std::pair<StopID, Coord>> stops = {};
+    // Save the stops to a vector, as map can not be sorted.
+    std::vector<coord_pair> stops = {};
     for (auto &pair : stops_map_) {
         stops.push_back({pair.first, get_stop_coord(pair.first)});
     }
+    // Sort the resulting vector using function compCoord wrt current stop coords.
     std::sort(stops.begin(), stops.end(), [cur_stop, this](coord_pair stop1, coord_pair stop2)
     { return compCoord(get_stop_coord(stop1.first), get_stop_coord(stop2.first), cur_stop.coord); });
 
@@ -411,11 +425,34 @@ bool Datastructures::remove_stop(StopID id)
             region_it->second.stops.erase(pos);
         }
     }
-    // Delete the stop in the main container.
-    auto name_it = std::find(names_map_.begin(), names_map_.end(),
-                             [id](std::pair<Name, StopID> pair)
-                             { return pair.second == id; });
-    names_map_.erase(name_it);
+    // Delete the stop in the containers. Find element in multimap using
+    // StopID as search key because of its uniqueness.
+//    auto name_it     = std::find_if(names_map_.begin(), names_map_.end(),
+//                                    [id](std::pair<Name, StopID> pair)
+//                                    { return pair.second == id; });
+//    auto distance_it = std::find_if(distance_map_.begin(), distance_map_.end(),
+//                                    [id](std::pair<int, StopID> pair)
+//                                    { return pair.second == id; });
+
+//    names_map_.erase(name_it);
+//    distance_map_.erase(distance_it);
+    Name oldname = get_stop_name(id);
+    auto name_iters = names_map_.equal_range(oldname);
+    for (auto it = name_iters.first; it != name_iters.second; it++) {
+        if (it->second == id) {
+            names_map_.erase(it);
+            break;
+        }
+    }
+    Coord coord = get_stop_coord(id);
+    int distance = coord.x*coord.x + coord.y*coord.y;
+    auto distance_iters = distance_map_.equal_range(distance);
+    for (auto it = distance_iters.first; it != distance_iters.second; it++) {
+        if (it->second == id) {
+            distance_map_.erase(it);
+            break;
+        }
+    }
     stops_map_.erase(stop_it);
     return true;
 }
@@ -434,7 +471,7 @@ RegionID Datastructures::stops_common_region(StopID id1, StopID id2)
     }
 
     std::vector<RegionID> parent1 = {region_id1}, parent2 = {region_id2};
-    // Get all parents of the two given stops using while loops.
+    // Get all parents of the two given stops.
     while (regions_map_[region_id1].parent != "") {
         parent1.push_back(regions_map_[region_id1].parent);
         region_id1 = regions_map_[region_id1].parent;
@@ -482,6 +519,7 @@ void Datastructures::get_stops_fromRegion(Region &cur_region, std::vector<StopID
     if (cur_region.subregions.empty()) {
         return;
     }
+    // Recursive part.
     for (auto &subregion_id : cur_region.subregions) {
         get_stops_fromRegion(regions_map_[subregion_id] , stops);
     }
