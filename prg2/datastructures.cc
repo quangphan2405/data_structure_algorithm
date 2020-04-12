@@ -79,7 +79,7 @@ bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
         return false;
     } else {
         // Initially stop does not belong to any region.
-        Stop new_stop  = {name, xy, ""};
+        Stop new_stop  = {name, xy, "", {}};
         int distance   = xy.x*xy.x + xy.y*xy.y;
         stops_map_[id] = new_stop;
         names_map_.insert({name, id});
@@ -499,17 +499,30 @@ bool Datastructures::add_route(RouteID id, std::vector<StopID> stops)
         if (!existStop(stop_id)) {
             return false;
         }
+        stops_map_[stop_id].routes.push_back(id);
     }
 
-    Route route = {stops};
-    routes_map_[id] = route;
+    routes_map_[id] = {stops};
     return true;
 }
 
 std::vector<std::pair<RouteID, StopID>> Datastructures::routes_from(StopID stopid)
 {
+    if (!existStop(stopid)) {
+        return {{NO_ROUTE, NO_STOP}};
+    }
 
-    return {{NO_ROUTE, NO_STOP}};
+    routes_vec routes = stops_map_[stopid].routes;
+    if (routes.empty()) {
+        return {};
+    }
+    std::vector<std::pair<RouteID, StopID>> return_vec = {};
+    for (RouteID route_id : routes) {
+        stops_vec stops = routes_map_[route_id].stops;
+        auto iter = std::find(stops.begin(), stops.end(), stopid);
+        return_vec.push_back({route_id, *(iter+1)});
+    }
+    return return_vec;
 }
 
 std::vector<StopID> Datastructures::route_stops(RouteID id)
