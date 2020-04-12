@@ -21,6 +21,7 @@ Type random_in_range(Type start, Type end)
 
 using stops_vec   = std::vector<StopID>;
 using regions_vec = std::vector<RegionID>;
+using routes_vec  = std::vector<RouteID>;
 using name_pair   = std::pair<StopID, Name>;
 using coord_pair  = std::pair<StopID, Coord>;
 
@@ -57,6 +58,7 @@ void Datastructures::clear_all()
     names_map_.clear();
     distance_map_.clear();
     regions_map_.clear();
+    routes_map_.clear();
 }
 
 std::vector<StopID> Datastructures::all_stops()
@@ -477,19 +479,36 @@ RegionID Datastructures::stops_common_region(StopID id1, StopID id2)
 
 std::vector<RouteID> Datastructures::all_routes()
 {
-    // Replace this comment and the line below with your implementation
-    return {NO_ROUTE};
+    if (routes_map_.empty()) {
+        return {};
+    }
+    routes_vec routes = {};
+    for (auto &pair : routes_map_) {
+        routes.push_back(pair.first); // Get RouteIDs.
+    }
+    return routes;
 }
 
 bool Datastructures::add_route(RouteID id, std::vector<StopID> stops)
 {   
-    // Replace this comment and the line below with your implementation
-    return false;
+    if (existRoute(id) || stops.size() <= 1) {
+        return false;
+    }
+
+    for (StopID stop_id : stops) {
+        if (!existStop(stop_id)) {
+            return false;
+        }
+    }
+
+    Route route = {stops};
+    routes_map_[id] = route;
+    return true;
 }
 
 std::vector<std::pair<RouteID, StopID>> Datastructures::routes_from(StopID stopid)
 {
-    // Replace this comment and the line below with your implementation
+
     return {{NO_ROUTE, NO_STOP}};
 }
 
@@ -563,6 +582,15 @@ bool Datastructures::existStop(StopID id) {
 bool Datastructures::existRegion(RegionID id) {
     // Check if given region id is added to main region container.
     if (regions_map_.find(id) != regions_map_.end()) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool Datastructures::existRoute(RouteID id) {
+    // Check if given route id is added to main route container.
+    if (routes_map_.find(id) != routes_map_.end()) {
         return true;
     } else {
         return false;
