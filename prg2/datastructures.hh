@@ -8,6 +8,12 @@
 #include <tuple>
 #include <utility>
 #include <limits>
+#include <algorithm>
+#include <map>
+#include <unordered_map>
+#include <cmath>
+#include <vector>
+#include <iostream>
 
 // Types for IDs
 using StopID = long int;
@@ -33,6 +39,21 @@ struct Coord
     int y = NO_VALUE;
 };
 
+struct Stop
+{
+    Name name;
+    Coord coord;
+    RegionID parent;
+};
+
+struct Region
+{
+    RegionID parent;
+    Name name;
+    std::vector<RegionID> subregions;
+    std::vector<StopID> stops;
+};
+
 // Example: Defining == and hash function for Coord so that it can be used
 // as key for std::unordered_map/set, if needed
 inline bool operator==(Coord c1, Coord c2) { return c1.x == c2.x && c1.y == c2.y; }
@@ -49,6 +70,7 @@ inline bool operator<(Coord c1, Coord c2)
 
 // Return value for cases where coordinates were not found
 Coord const NO_COORD = {NO_VALUE, NO_VALUE};
+Coord const ORIGIN = {0, 0};
 
 // Type for time of day in minutes from midnight (i.e., 60*hours + minutes)
 using Time = int;
@@ -238,7 +260,14 @@ public:
 
 private:
     // Add stuff needed for your class implementation here
-
+    std::unordered_map<StopID, Stop> stops_map_ = {};
+    std::multimap<Name, StopID> names_map_ = {};
+    std::multimap<int, StopID> distance_map_ = {};
+    std::unordered_map<RegionID, Region> regions_map_ = {};
+    bool existStop(StopID id);
+    bool existRegion(RegionID id);
+    void get_stops_fromRegion(Region &cur_region, std::vector<StopID> &stops);
+    bool compCoord(Coord c1, Coord c2, Coord root);
 };
 
 #endif // DATASTRUCTURES_HH
