@@ -9,6 +9,7 @@
 #include <utility>
 #include <limits>
 #include <algorithm>
+#include <set>
 #include <map>
 #include <unordered_map>
 #include <cmath>
@@ -44,6 +45,7 @@ struct Stop
     Name name;
     Coord coord;
     RegionID parent;
+    std::vector<RouteID> routes;
 };
 
 struct Region
@@ -51,6 +53,11 @@ struct Region
     RegionID parent;
     Name name;
     std::vector<RegionID> subregions;
+    std::vector<StopID> stops;
+};
+
+struct Route
+{
     std::vector<StopID> stops;
 };
 
@@ -264,8 +271,10 @@ private:
     std::multimap<Name, StopID> names_map_ = {};
     std::multimap<int, StopID> distance_map_ = {};
     std::unordered_map<RegionID, Region> regions_map_ = {};
+    std::unordered_map<RouteID, Route> routes_map_ = {};
     bool existStop(StopID id);
     bool existRegion(RegionID id);
+    bool existRoute(RouteID id);
     void get_stops_fromRegion(Region &cur_region, std::vector<StopID> &stops);
     bool compCoord(Coord c1, Coord c2, Coord root);
 };

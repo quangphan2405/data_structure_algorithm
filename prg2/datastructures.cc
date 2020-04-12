@@ -24,6 +24,7 @@ using regions_vec = std::vector<RegionID>;
 using routes_vec  = std::vector<RouteID>;
 using name_pair   = std::pair<StopID, Name>;
 using coord_pair  = std::pair<StopID, Coord>;
+using stop_pair   = std::pair<StopID, Stop>;
 
 // Modify the code below to implement the functionality of the class.
 // Also remove comments from the parameter names when you implement
@@ -527,13 +528,18 @@ std::vector<std::pair<RouteID, StopID>> Datastructures::routes_from(StopID stopi
 
 std::vector<StopID> Datastructures::route_stops(RouteID id)
 {
-    // Replace this comment and the line below with your implementation
-    return {NO_STOP};
+    if (!existRoute(id)) {
+        return {NO_STOP};
+    }
+    return routes_map_[id].stops;
 }
 
 void Datastructures::clear_routes()
 {
-    // Replace this comment and the line below with your implementation
+    for (stop_pair pair : stops_map_) {
+        pair.second.routes = {};
+    }
+    routes_map_.clear();
 }
 
 std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_any(StopID fromstop, StopID tostop)
