@@ -496,11 +496,17 @@ bool Datastructures::add_route(RouteID id, std::vector<StopID> stops)
         return false;
     }
 
-    for (StopID stop_id : stops) {
-        if (!existStop(stop_id)) {
+    for (auto it = stops.begin(); it != stops.end(); it++) {
+        if (!existStop(*it)) {
             return false;
         }
-        stops_map_[stop_id].routes.push_back(id);
+        if (it == stops.begin()) {
+            stops_map_[*it].routes[id] = {NO_STOP, *(it+1)};
+        } else if (it == stops.end() - 1) {
+            stops_map_[*it].routes[id] = {*(it-1), NO_STOP};
+        } else {
+            stops_map_[*it].routes[id] = {*(it-1), *(it+1)};
+        }
     }
 
     routes_map_[id] = {stops};
@@ -513,15 +519,13 @@ std::vector<std::pair<RouteID, StopID>> Datastructures::routes_from(StopID stopi
         return {{NO_ROUTE, NO_STOP}};
     }
 
-    routes_vec routes = stops_map_[stopid].routes;
+    auto routes = stops_map_[stopid].routes;
     if (routes.empty()) {
         return {};
     }
     std::vector<std::pair<RouteID, StopID>> return_vec = {};
-    for (RouteID route_id : routes) {
-        stops_vec stops = routes_map_[route_id].stops;
-        auto iter = std::find(stops.begin(), stops.end(), stopid);
-        return_vec.push_back({route_id, *(iter+1)});
+    for (auto pair : routes) {
+        return_vec.push_back({pair.first, pair.second.second});
     }
     return return_vec;
 }
@@ -544,8 +548,12 @@ void Datastructures::clear_routes()
 
 std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_any(StopID fromstop, StopID tostop)
 {
-    // Replace this comment and the line below with your implementation
-    return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
+    if (!existStop(fromstop) || !existStop(tostop)) {
+        return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
+    }
+
+    auto routes_fromstop = stops_map_[fromstop].routes;
+
 }
 
 std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_least_stops(StopID fromstop, StopID tostop)

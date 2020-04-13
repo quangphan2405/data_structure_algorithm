@@ -45,7 +45,7 @@ struct Stop
     Name name;
     Coord coord;
     RegionID parent;
-    std::vector<RouteID> routes;
+    std::map<RouteID, std::pair<StopID, StopID>> routes;
 };
 
 struct Region
