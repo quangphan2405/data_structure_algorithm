@@ -80,7 +80,7 @@ bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
         return false;
     } else {
         // Initially stop does not belong to any region.
-        Stop new_stop  = {name, xy, "", {}};
+        Stop new_stop  = {name, xy, "", {}, white};
         int distance   = xy.x*xy.x + xy.y*xy.y;
         stops_map_[id] = new_stop;
         names_map_.insert({name, id});
@@ -553,6 +553,7 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_any(S
     }
 
     auto routes_fromstop = stops_map_[fromstop].routes;
+    std::vector<RouteID> directions = {};
 
 }
 
@@ -649,4 +650,11 @@ bool Datastructures::compCoord(Coord c1, Coord c2, Coord root) {
     // relative y-coordinate comes first.
     if ((d_c1 < d_c2) || ((d_c1 == d_c2) && (c1.y - root.y < c2.y - root.y))) { return true; }
     else { return false; }
+}
+
+int Datastructures::getDistance(StopID fromstop, StopID tostop) {
+    Coord from = stops_map_[fromstop].coord;
+    Coord to = stops_map_[tostop].coord;
+    int d_2 = (from.x - to.x)*(from.x - to.x) + (from.y - to.y)*(from.y - to.y);
+    return int(sqrt(d_2) + 0.5);
 }

@@ -26,6 +26,7 @@ using Name = std::string;
 RouteID const NO_ROUTE = "!!NO_ROUTE!!";
 StopID const NO_STOP = -1;
 RegionID const NO_REGION = "!!NO_REGION!!";
+enum COLOR {white, grey, black};
 
 // Return value for cases where integer values were not found
 int const NO_VALUE = std::numeric_limits<int>::min();
@@ -46,6 +47,7 @@ struct Stop
     Coord coord;
     RegionID parent;
     std::map<RouteID, std::pair<StopID, StopID>> routes;
+    COLOR color;
 };
 
 struct Region
@@ -277,6 +279,7 @@ private:
     bool existRoute(RouteID id);
     void get_stops_fromRegion(Region &cur_region, std::vector<StopID> &stops);
     bool compCoord(Coord c1, Coord c2, Coord root);
+    int getDistance(StopID fromstop, StopID tostop);
 };
 
 #endif // DATASTRUCTURES_HH
