@@ -658,3 +658,38 @@ int Datastructures::getDistance(StopID fromstop, StopID tostop) {
     int d_2 = (from.x - to.x)*(from.x - to.x) + (from.y - to.y)*(from.y - to.y);
     return int(sqrt(d_2) + 0.5);
 }
+
+int Datastructures::isIntersecting(bool *s_visited, bool *t_visited, int num_nodes)
+{
+    for(int i=0; i<num_nodes; i++)
+    {
+        // if a vertex is visited by both front
+        // and back BFS search return that node
+        // else return -1
+        if(s_visited[i] && t_visited[i])
+            return i;
+    }
+    return -1;
+};
+
+void Datastructures::BFS(std::list<int> *queue, bool *visited, int *parent) {
+    int current = queue->front();
+    queue->pop_front();
+    std::list<int>::iterator i;
+    for (i=adj[current].begin();i != adj[current].end();i++)
+    {
+        // If adjacent vertex is not visited earlier
+        // mark it visited by assigning true value
+        if (!visited[*i])
+        {
+            // set current as parent of this vertex
+            parent[*i] = current;
+
+            // Mark this vertex visited
+            visited[*i] = true;
+
+            // Push to the end of queue
+            queue->push_back(*i);
+        }
+    }
+};

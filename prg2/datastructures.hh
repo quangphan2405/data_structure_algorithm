@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <set>
 #include <map>
+#include <list>
 #include <unordered_map>
 #include <cmath>
 #include <vector>
@@ -280,6 +281,9 @@ private:
     void get_stops_fromRegion(Region &cur_region, std::vector<StopID> &stops);
     bool compCoord(Coord c1, Coord c2, Coord root);
     int getDistance(StopID fromstop, StopID tostop);
+    int isIntersecting(bool *s_visited, bool *t_visited, int num_nodes);
+    void BFS(std::list<int> *queue, bool *visited, int *parent);
+
 };
 
 #endif // DATASTRUCTURES_HH
