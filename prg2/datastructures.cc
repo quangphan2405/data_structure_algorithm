@@ -1,4 +1,4 @@
-    // Datastructures.cc
+// Datastructures.cc
 
 #include "datastructures.hh"
 
@@ -38,7 +38,7 @@ Datastructures::Datastructures()
     distance_map_ = {};
     regions_map_  = {};
     counter_      = 0;
-    adj_          = {{}};
+    int_map_      = {};
 }
 
 Datastructures::~Datastructures()
@@ -81,9 +81,9 @@ bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
     if (existStop(id)) {
         return false;
     } else {
-        // Initially stop does not belong to any region.
-        counter_ += 1;
+        // Initially stop does not belong to any region.        
         Stop new_stop  = {counter_, name, xy, "", {}, white};
+        counter_ += 1;
         int distance   = xy.x*xy.x + xy.y*xy.y;
         stops_map_[id] = new_stop;
         names_map_.insert({name, id});
@@ -503,12 +503,10 @@ bool Datastructures::add_route(RouteID id, std::vector<StopID> stops)
         if (!existStop(*it)) {
             return false;
         }
-        if (it == stops.begin()) {
-            stops_map_[*it].routes[id] = {NO_STOP, *(it+1)};
-        } else if (it == stops.end() - 1) {
-            stops_map_[*it].routes[id] = {*(it-1), NO_STOP};
+        if  (it == stops.end() - 1) {
+            stops_map_[*it].routes[id] = {NO_STOP};
         } else {
-            stops_map_[*it].routes[id] = {*(it-1), *(it+1)};
+            stops_map_[*it].routes[id] = {*(it+1)};
         }
     }
 
@@ -528,10 +526,10 @@ std::vector<std::pair<RouteID, StopID>> Datastructures::routes_from(StopID stopi
     }
     std::vector<std::pair<RouteID, StopID>> return_vec = {};
     for (auto pair : routes) {
-        if (pair.second.second == NO_STOP) {
+        if (pair.second == NO_STOP) {
             continue;
         }
-        return_vec.push_back({pair.first, pair.second.second});
+        return_vec.push_back({pair.first, pair.second});
     }
     return return_vec;
 }
@@ -550,7 +548,7 @@ void Datastructures::clear_routes()
         pair.second.routes = {};
     }
     routes_map_.clear();
-    adj_.clear();
+    int_map_.clear();
 }
 
 std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_any(StopID fromstop, StopID tostop)
@@ -562,15 +560,15 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_any(S
     auto routes_fromstop = stops_map_[fromstop].routes;
     std::vector<RouteID> directions = {};
 
-    int V = stops_map_.size();
+    int num_stops = int(stops_map_.size());
     // boolean array for BFS started from
     // source and target(front and backward BFS)
     // for keeping track on visited nodes
-    bool s_visited[V], t_visited[V];
+    bool s_visited[num_stops], t_visited[num_stops];
 
     // Keep track on parents of nodes
     // for front and backward search
-    StopID s_parent[V], t_parent[V];
+    StopID s_parent[num_stops], t_parent[num_stops];
 
     // queue for front and backward search
     std::list<StopID> s_queue, t_queue;
@@ -578,7 +576,7 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_any(S
     int intersectNode = -1;
 
     // necessary initialization
-    for(int i=0; i<V; i++)
+    for(int i=0; i < num_stops; i++)
     {
         s_visited[i] = false;
         t_visited[i] = false;
@@ -603,7 +601,7 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_any(S
         BFS(&t_queue, t_visited, t_parent);
 
         // check for intersecting vertex
-        intersectNode = isIntersecting(s_visited, t_visited, V);
+        intersectNode = isIntersecting(s_visited, t_visited, num_stops);
 
         // If intersecting vertex is found
         // that means there exist a path
@@ -624,7 +622,7 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_least
     auto routes_fromstop = stops_map_[fromstop].routes;
     std::vector<RouteID> directions = {};
 
-    int V = stops_map_.size();
+    int V = int(stops_map_.size());
     // boolean array for BFS started from
     // source and target(front and backward BFS)
     // for keeping track on visited nodes
@@ -766,11 +764,11 @@ bool Datastructures::compCoord(Coord c1, Coord c2, Coord root) {
     else { return false; }
 }
 
-int Datastructures::getDistance(StopID fromstop, StopID tostop) {
+Distance Datastructures::getDistance(StopID fromstop, StopID tostop) {
     Coord from = stops_map_[fromstop].coord;
     Coord to = stops_map_[tostop].coord;
     int d_2 = (from.x - to.x)*(from.x - to.x) + (from.y - to.y)*(from.y - to.y);
-    return sqrt(d_2);
+    return int(sqrt(d_2));
 }
 
 int Datastructures::isIntersecting(bool *s_visited, bool *t_visited, int num_nodes)
@@ -789,20 +787,19 @@ int Datastructures::isIntersecting(bool *s_visited, bool *t_visited, int num_nod
 void Datastructures::BFS(std::list<StopID> *queue, bool *visited, StopID *parent) {
     StopID current = queue->front();
     queue->pop_front();
-    for (auto it : stops_map_[current].routes)
-    {
+    for (auto it : stops_map_[current].routes) {
         // If adjacent vertex is not visited earlier
         // mark it visited by assigning true value
-        if (!visited[it.second.second])
-        {
+        int current_id = stops_map_[it.second].int_id;
+        if (!visited[current_id]) {
             // set current as parent of this vertex
-            parent[it.second.second] = current;
+            parent[current_id] = current;
 
             // Mark this vertex visited
-            visited[it.second.second] = true;
+            visited[current_id] = true;
 
             // Push to the end of queue
-            queue->push_back(it.second.second);
+            queue->push_back(it.second);
         }
     }
 };
@@ -823,7 +820,7 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::printPath(Sto
         i = t_parent[i];
     }
 
-    int distance = 0;
+    Distance distance = 0;
     std::vector<std::tuple<StopID, RouteID, Distance>> return_vec = {};
     for (auto it = path.begin(); it != path.end(); it++) {
         StopID current_stop = *it;
@@ -833,8 +830,8 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::printPath(Sto
             break;
         }
 
-        for (auto route: current_routes) {
-            if (route.second.second == *(it+1)) {
+        for (auto route : current_routes) {
+            if (route.second == *(it+1)) {
                 return_vec.push_back({current_stop, route.first, distance});
             }
             break;

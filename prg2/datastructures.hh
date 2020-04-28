@@ -48,7 +48,7 @@ struct Stop
     Name name;
     Coord coord;
     RegionID parent;
-    std::unordered_map<RouteID, std::pair<StopID, StopID>> routes;
+    std::unordered_map<RouteID, StopID> routes;
     COLOR color;
 };
 
@@ -271,7 +271,7 @@ public:
 private:
     // Add stuff needed for your class implementation here
     int counter_ = 0;
-    std::vector<std::vector<StopID>> adj_ = {};
+    std::unordered_map<StopID, int> int_map_ = {};
     std::unordered_map<StopID, Stop> stops_map_ = {};
     std::multimap<Name, StopID> names_map_ = {};
     std::multimap<int, StopID> distance_map_ = {};
@@ -284,7 +284,7 @@ private:
     bool compCoord(Coord c1, Coord c2, Coord root);
     int getDistance(StopID fromstop, StopID tostop);
     int isIntersecting(bool *s_visited, bool *t_visited, int num_nodes);
-    void BFS(std::list<StopID> *queue, bool *visited, StopID *parent);
+    void BFS(std::list<StopID> *queue, bool *visisted, StopID *parent);
     std::vector<std::tuple<StopID, RouteID, Distance>> printPath(StopID *s_parent, StopID *t_parent, StopID fromstop, StopID tostop, StopID intersectNode);
 };
 
