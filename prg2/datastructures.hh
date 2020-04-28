@@ -27,7 +27,7 @@ using Name = std::string;
 RouteID const NO_ROUTE = "!!NO_ROUTE!!";
 StopID const NO_STOP = -1;
 RegionID const NO_REGION = "!!NO_REGION!!";
-enum COLOR {white, grey, black};
+enum COLOR {white, black};
 
 // Return value for cases where integer values were not found
 int const NO_VALUE = std::numeric_limits<int>::min();
@@ -48,8 +48,8 @@ struct Stop
     Name name;
     Coord coord;
     RegionID parent;
-    std::unordered_map<RouteID, StopID> routes;
-    COLOR color;
+    std::unordered_map<RouteID, std::pair<StopID, StopID>> routes;
+    bool visited;
 };
 
 struct Region
@@ -271,8 +271,10 @@ public:
 private:
     // Add stuff needed for your class implementation here
     int counter_ = -1;
+    std::unordered_map<StopID, bool> visited_map_ = {};
+    std::unordered_map<StopID, std::pair<RouteID, StopID>> parent_map_ = {};
     std::unordered_map<StopID, int> int_map_ = {};
-    std::unordered_map<StopID, std::list<int>> adj_map_ = {};
+    std::unordered_map<StopID, std::list<std::pair<RouteID, StopID>>> adj_map_ = {};
     std::unordered_map<StopID, Stop> stops_map_ = {};
     std::multimap<Name, StopID> names_map_ = {};
     std::multimap<int, StopID> distance_map_ = {};
@@ -285,9 +287,9 @@ private:
     void get_stops_fromRegion(Region &cur_region, std::vector<StopID> &stops);
     bool compCoord(Coord c1, Coord c2, Coord root);
     Distance getDistance(StopID fromstop, StopID tostop);
-    int isIntersecting(bool *s_visited, bool *t_visited, int num_nodes);
-    void BFS(std::list<int> *queue, bool *visisted, int *parent);
-    std::vector<std::tuple<StopID, RouteID, Distance>> printPath(int *s_parent, int *t_parent, StopID fromstop, StopID tostop, StopID intersectNode);
+    StopID isIntersecting(std::vector<StopID> *s_visited, std::vector<StopID> *t_visited);
+    void BFS(std::list<StopID> *queue, std::vector<StopID> *visited, std::unordered_map<StopID, std::pair<RouteID, StopID>> *parent, bool flow);
+    std::vector<std::tuple<StopID, RouteID, Distance>> printPath(std::unordered_map<StopID, std::pair<RouteID, StopID>> *s_parent, std::unordered_map<StopID, std::pair<RouteID, StopID>> *t_parent, StopID fromstop, StopID tostop, StopID intersectNode);
 };
 
 #endif // DATASTRUCTURES_HH
