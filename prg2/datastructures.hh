@@ -271,8 +271,8 @@ public:
 private:
     // Add stuff needed for your class implementation here
     int counter_ = -1;
-    std::unordered_map<int, StopID> int_map_ = {};
-    std::unordered_map<StopID, std::list<StopID>> adj_map_ = {};
+    std::unordered_map<StopID, int> int_map_ = {};
+    std::unordered_map<StopID, std::list<int>> adj_map_ = {};
     std::unordered_map<StopID, Stop> stops_map_ = {};
     std::multimap<Name, StopID> names_map_ = {};
     std::multimap<int, StopID> distance_map_ = {};
@@ -281,12 +281,13 @@ private:
     bool existStop(StopID id);
     bool existRegion(RegionID id);
     bool existRoute(RouteID id);
+    int getInt_ID (StopID id);
     void get_stops_fromRegion(Region &cur_region, std::vector<StopID> &stops);
     bool compCoord(Coord c1, Coord c2, Coord root);
     Distance getDistance(StopID fromstop, StopID tostop);
     int isIntersecting(bool *s_visited, bool *t_visited, int num_nodes);
-    void BFS(std::list<StopID> *queue, bool *visisted, StopID *parent);
-    std::vector<std::tuple<StopID, RouteID, Distance>> printPath(StopID *s_parent, StopID *t_parent, StopID fromstop, StopID tostop, StopID intersectNode);
+    void BFS(std::list<int> *queue, bool *visisted, int *parent);
+    std::vector<std::tuple<StopID, RouteID, Distance>> printPath(int *s_parent, int *t_parent, StopID fromstop, StopID tostop, StopID intersectNode);
 };
 
 #endif // DATASTRUCTURES_HH

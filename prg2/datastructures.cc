@@ -86,7 +86,7 @@ bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
         counter_ += 1;
         Stop new_stop  = {counter_, name, xy, "", {}, white};
         int distance   = xy.x*xy.x + xy.y*xy.y;
-        int_map_[counter_] = id;
+        int_map_[id] = counter_;
         stops_map_[id] = new_stop;
         names_map_.insert({name, id});
         distance_map_.insert({distance, id});
@@ -562,21 +562,20 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_any(S
         return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
     }
 
-    auto routes_fromstop = stops_map_[fromstop].routes;
-    std::vector<RouteID> directions = {};
-
     int num_stops = int(stops_map_.size());
     // boolean array for BFS started from
     // source and target(front and backward BFS)
     // for keeping track on visited nodes
     bool s_visited[num_stops], t_visited[num_stops];
 
+    int from_int = getInt_ID(fromstop), to_int = getInt_ID(tostop);
+
     // Keep track on parents of nodes
     // for front and backward search
-    StopID s_parent[num_stops], t_parent[num_stops];
+    int s_parent[num_stops], t_parent[num_stops];
 
     // queue for front and backward search
-    std::list<StopID> s_queue, t_queue;
+    std::list<int> s_queue, t_queue;
 
     int intersectNode = -1;
 
@@ -587,17 +586,17 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_any(S
         t_visited[i] = false;
     }
 
-    s_queue.push_back(fromstop);
-    s_visited[fromstop] = true;
+    s_queue.push_back(from_int);
+    s_visited[from_int] = true;
 
     // parent of source is set to -1
-    s_parent[fromstop]=-1;
+    s_parent[from_int]=-1;
 
-    t_queue.push_back(tostop);
-    t_visited[tostop] = true;
+    t_queue.push_back(to_int);
+    t_visited[to_int] = true;
 
     // parent of target is set to -1
-    t_parent[tostop] = -1;
+    t_parent[to_int] = -1;
 
     while (!s_queue.empty() && !t_queue.empty())
     {
@@ -634,12 +633,14 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_least
     // for keeping track on visited nodes
     bool s_visited[V], t_visited[V];
 
+    int from_int = getInt_ID(fromstop), to_int = getInt_ID(tostop);
+
     // Keep track on parents of nodes
     // for front and backward search
-    StopID s_parent[V], t_parent[V];
+    int s_parent[V], t_parent[V];
 
     // queue for front and backward search
-    std::list<StopID> s_queue, t_queue;
+    std::list<int> s_queue, t_queue;
 
     int intersectNode = -1;
 
@@ -650,17 +651,17 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_least
         t_visited[i] = false;
     }
 
-    s_queue.push_back(fromstop);
-    s_visited[fromstop] = true;
+    s_queue.push_back(from_int);
+    s_visited[from_int] = true;
 
     // parent of source is set to -1
-    s_parent[fromstop]=-1;
+    s_parent[from_int]=-1;
 
-    t_queue.push_back(tostop);
-    t_visited[tostop] = true;
+    t_queue.push_back(to_int);
+    t_visited[to_int] = true;
 
     // parent of target is set to -1
-    t_parent[tostop] = -1;
+    t_parent[to_int] = -1;
 
     while (!s_queue.empty() && !t_queue.empty())
     {
@@ -743,6 +744,10 @@ bool Datastructures::existRoute(RouteID id) {
     }
 }
 
+int Datastructures::getInt_ID (StopID id) {
+    return int_map_[id];
+}
+
 void Datastructures::get_stops_fromRegion(Region &cur_region, std::vector<StopID> &stops) {
     // A recursive function to get direct stops of current region, and then
     // apply for its subregions.
@@ -790,10 +795,10 @@ int Datastructures::isIntersecting(bool *s_visited, bool *t_visited, int num_nod
     return -1;
 };
 
-void Datastructures::BFS(std::list<StopID> *queue, bool *visited, StopID *parent) {
+void Datastructures::BFS(std::list<int> *queue, bool *visited, int *parent) {
     StopID current = queue->front();
     queue->pop_front();
-    for (auto it = adj_list_[current].begin(); it != adj_list_[current].end(); it++) {
+    for (auto it = adj_map_[current].begin(); it != adj_map_[current].end(); it++) {
         // If adjacent vertex is not visited earlier
         // mark it visited by assigning true value
         std::cout << *it << std::endl;
@@ -810,7 +815,7 @@ void Datastructures::BFS(std::list<StopID> *queue, bool *visited, StopID *parent
     }
 };
 
-std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::printPath(StopID *s_parent, StopID *t_parent, StopID fromstop, StopID tostop, StopID intersectNode)
+std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::printPath(int *s_parent, int *t_parent, StopID fromstop, StopID tostop, StopID intersectNode)
 {
     std::vector<int> path;
     path.push_back(intersectNode);
