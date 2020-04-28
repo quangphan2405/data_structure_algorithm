@@ -44,10 +44,11 @@ struct Coord
 
 struct Stop
 {
+    int int_id;
     Name name;
     Coord coord;
     RegionID parent;
-    std::map<RouteID, std::pair<StopID, StopID>> routes;
+    std::unordered_map<RouteID, std::pair<StopID, StopID>> routes;
     COLOR color;
 };
 
@@ -99,7 +100,6 @@ using Distance = int;
 
 // Return value for cases where Duration is unknown
 Distance const NO_DISTANCE = NO_VALUE;
-
 
 
 // This is the class you are supposed to implement
@@ -270,6 +270,8 @@ public:
 
 private:
     // Add stuff needed for your class implementation here
+    int counter_ = 0;
+    std::vector<std::vector<StopID>> adj_ = {};
     std::unordered_map<StopID, Stop> stops_map_ = {};
     std::multimap<Name, StopID> names_map_ = {};
     std::multimap<int, StopID> distance_map_ = {};
@@ -282,8 +284,8 @@ private:
     bool compCoord(Coord c1, Coord c2, Coord root);
     int getDistance(StopID fromstop, StopID tostop);
     int isIntersecting(bool *s_visited, bool *t_visited, int num_nodes);
-    void BFS(std::list<int> *queue, bool *visited, int *parent);
-
+    void BFS(std::list<StopID> *queue, bool *visited, StopID *parent);
+    std::vector<std::tuple<StopID, RouteID, Distance>> printPath(StopID *s_parent, StopID *t_parent, StopID fromstop, StopID tostop, StopID intersectNode);
 };
 
 #endif // DATASTRUCTURES_HH
