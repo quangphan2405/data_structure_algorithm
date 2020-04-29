@@ -1162,6 +1162,10 @@ MainProgram::CmdResult MainProgram::cmd_journey_any(std::ostream& output, MainPr
     {
         output << "No journey found!" << endl;
     }
+    else if (steps.front() == make_tuple(NO_STOP, NO_ROUTE, NO_DISTANCE))
+    {
+        output << "Starting or destination stop not found!" << endl;
+    }
     else
     {
         auto [stop, route, dist] = steps.front();
@@ -1210,6 +1214,10 @@ MainProgram::CmdResult MainProgram::cmd_journey_shortest_distance(std::ostream& 
     {
         output << "No journey found!" << endl;
     }
+    else if (steps.front() == make_tuple(NO_STOP, NO_ROUTE, NO_DISTANCE))
+    {
+        output << "Starting or destination stop not found!" << endl;
+    }
     else
     {
         auto [stop, route, dist] = steps.front();
@@ -1253,6 +1261,10 @@ MainProgram::CmdResult MainProgram::cmd_journey_least_stops(std::ostream& output
     {
         output << "No journey found!" << endl;
     }
+    else if (steps.front() == make_tuple(NO_STOP, NO_ROUTE, NO_DISTANCE))
+    {
+        output << "Starting or destination stop not found!" << endl;
+    }
     else
     {
         auto [stop, route, dist] = steps.front();
@@ -1293,6 +1305,10 @@ MainProgram::CmdResult MainProgram::cmd_journey_with_cycle(std::ostream& output,
     if (steps.empty())
     {
         output << "No journey found!" << endl;
+    }
+    else if (steps.front() == make_tuple(NO_STOP, NO_ROUTE, NO_DISTANCE))
+    {
+        output << "Starting stop not found!" << endl;
     }
     else
     {
@@ -1427,6 +1443,10 @@ MainProgram::CmdResult MainProgram::cmd_journey_earliest_arrival(std::ostream& o
     if (steps.empty())
     {
         output << "No journey found!" << endl;
+    }
+    else if (steps.front() == make_tuple(NO_STOP, NO_ROUTE, NO_TIME))
+    {
+        output << "Starting or destination stop not found!" << endl;
     }
     else
     {
