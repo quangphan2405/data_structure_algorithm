@@ -566,7 +566,7 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_any(S
 
 std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_least_stops(StopID fromstop, StopID tostop)
 {
-    if (!existStop(fromstop) || !existStop(tostop)) {
+    if (!existStop(fromstop) || !existStop(tostop) || fromstop == tostop) {
         return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
     }
 
@@ -606,7 +606,7 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_least
         // If intersecting vertex is found that means there exist a path
         if(intersectNode != NO_STOP) {
             // print the path and exit the loop
-            auto return_vec = printPath(&fw_parent, &bw_parent, fromstop, tostop, intersectNode);
+            auto return_vec = bi_dirPath(&fw_parent, &bw_parent, fromstop, tostop, intersectNode);
             return return_vec;
         }
     }
@@ -616,8 +616,20 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_least
 
 std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_with_cycle(StopID fromstop)
 {
-    // Replace this comment and the line below with your implementation
-    return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
+    if (!existStop(fromstop)) {
+        return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
+    }
+
+    stops_vec visited = {};
+    parent_map parent = {};
+    DFS(&visited, &parent, fromstop);
+
+    for (auto pair : parent) {
+        if (pair.first == pair.second.second) {
+
+        }
+    }
+
 }
 
 std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_shortest_distance(StopID fromstop, StopID tostop)
@@ -749,21 +761,41 @@ void Datastructures::BFS(std::list<StopID> *queue, stops_vec *visited, std::unor
     }
 };
 
-std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::printPath(parent_map *fw_visited, parent_map *t_parent, StopID fromstop, StopID tostop, StopID intersectNode)
+bool Datastructures::DFS(stops_vec *visited, std::unordered_map<StopID, std::pair<RouteID, StopID>> *parent, StopID cur_stop) {
+    visited->push_back(cur_stop);
+    auto adj_map = stops_map_[cur_stop].routes;
+    for (auto pair : adj_map) {
+        StopID adj_id = pair.second.second;
+        if (adj_id == NO_STOP) {
+            continue;
+        }
+        if (std::find(visited->begin(), visited->end(), adj_id) == visited->end()) {
+            // set current as parent of this vertex
+            (*parent)[adj_id] = {pair.first, cur_stop};
+
+            // DFS recursion for all unvisited stops
+            DFS(visited, parent, adj_id);
+        } else {
+            std::
+        }
+    }
+}
+
+std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::bi_dirPath(parent_map *fw_parent, parent_map *bw_parent, StopID fromstop, StopID tostop, StopID intersectNode)
 {
     std::vector<std::pair<RouteID, StopID>> path;
     //path.push_back(intersectNode);
     StopID id = intersectNode;
     while (id != fromstop) {
-        path.push_back({(*fw_visited)[id].first, (*fw_visited)[id].second});
-        id = (*fw_visited)[id].second;
+        path.push_back({(*fw_parent)[id].first, (*fw_parent)[id].second});
+        id = (*fw_parent)[id].second;
     }
     reverse(path.begin(), path.end());
     id = intersectNode;
-    path.push_back({(*t_parent)[intersectNode].first, intersectNode});
+    path.push_back({(*bw_parent)[intersectNode].first, intersectNode});
     while(id != tostop) {
-        path.push_back({(*t_parent)[id].first, (*t_parent)[id].second});
-        id = (*t_parent)[id].second;
+        path.push_back({(*bw_parent)[id].first, (*bw_parent)[id].second});
+        id = (*bw_parent)[id].second;
     }
     path.pop_back();
     path.push_back({NO_ROUTE, tostop});
