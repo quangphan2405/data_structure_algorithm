@@ -283,8 +283,9 @@ private:
     Distance getDistance(StopID fromstop, StopID tostop);
     StopID isIntersecting(std::vector<StopID> *s_visited, std::vector<StopID> *t_visited);
     void BFS(std::list<StopID> *queue, std::vector<StopID> *visited, std::unordered_map<StopID, std::pair<RouteID, StopID>> *parent, bool flow);
-    bool DFS(std::vector<StopID> *visited, std::unordered_map<StopID, std::pair<RouteID, StopID>> *parent, StopID cur_stop);
-    std::vector<std::tuple<StopID, RouteID, Distance>> bi_dirPath(std::unordered_map<StopID, std::pair<RouteID, StopID>> *s_parent, std::unordered_map<StopID, std::pair<RouteID, StopID>> *t_parent, StopID fromstop, StopID tostop, StopID intersectNode);
+    bool DFS(std::vector<StopID> *visited, std::unordered_map<StopID, std::pair<RouteID, StopID>> *parent, StopID cur_stop, std::tuple<RouteID, StopID, StopID> *return_pair);
+    std::vector<std::pair<RouteID, StopID>> bi_dirPath(std::unordered_map<StopID, std::pair<RouteID, StopID>> *s_parent, std::unordered_map<StopID, std::pair<RouteID, StopID>> *t_parent, StopID fromstop, StopID tostop, StopID intersectNode);
+    std::vector<std::tuple<StopID, RouteID, Distance>> getTuple(std::vector<std::pair<RouteID, StopID>> *path);
 };
 
 #endif // DATASTRUCTURES_HH
