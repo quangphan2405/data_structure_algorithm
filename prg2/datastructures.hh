@@ -42,27 +42,6 @@ struct Coord
     int y = NO_VALUE;
 };
 
-struct Stop
-{
-    Name name;
-    Coord coord;
-    RegionID parent;
-    std::unordered_map<RouteID, std::pair<StopID, StopID>> routes;
-    bool visited;
-};
-
-struct Region
-{
-    RegionID parent;
-    Name name;
-    std::vector<RegionID> subregions;
-    std::vector<StopID> stops;
-};
-
-struct Route
-{
-    std::vector<StopID> stops;
-};
 
 // Example: Defining == and hash function for Coord so that it can be used
 // as key for std::unordered_map/set, if needed
@@ -99,6 +78,29 @@ using Distance = int;
 
 // Return value for cases where Duration is unknown
 Distance const NO_DISTANCE = NO_VALUE;
+
+struct Stop
+{
+    Name name;
+    Coord coord;
+    RegionID parent;
+    std::unordered_map<RouteID, std::pair<StopID, StopID>> routes;
+    std::unordered_map<RouteID, std::set<Time>> time_tables;
+    bool visited;
+};
+
+struct Region
+{
+    RegionID parent;
+    Name name;
+    std::vector<RegionID> subregions;
+    std::vector<StopID> stops;
+};
+
+struct Route
+{
+    std::vector<StopID> stops;
+};
 
 
 // This is the class you are supposed to implement

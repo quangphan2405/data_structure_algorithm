@@ -86,7 +86,7 @@ bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
         return false;
     } else {
         // Initially stop does not belong to any region.
-        Stop new_stop  = {name, xy, "", {}, false};
+        Stop new_stop  = {name, xy, "", {}, {}, false};
         int distance   = xy.x*xy.x + xy.y*xy.y;
         stops_map_[id] = new_stop;
         names_map_.insert({name, id});
@@ -651,14 +651,61 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_short
 
 bool Datastructures::add_trip(RouteID routeid, std::vector<Time> const& stop_times)
 {
-    // Replace this comment and the line below with your implementation
-    return false;
+    if (!existRoute(routeid) || stop_times.empty()) {
+        return false;
+    }
+
+    stops_vec stops = routes_map_[routeid].stops;
+    if (stop_times.size() != stops.size()) {
+        return false;
+    }
+
+    auto it1 = stops.begin();
+    auto it2 = stop_times.begin();
+    while (true) {
+        stops_map_[*it1].time_tables[routeid].insert(*it2);
+        it1++;
+        it2++;
+        if (it1 == stops.end()) {
+            break;
+        }
+    }
+    return true;
 }
 
 std::vector<std::pair<Time, Duration>> Datastructures::route_times_from(RouteID routeid, StopID stopid)
 {
-    // Replace this comment and the line below with your implementation
-    return {{NO_TIME, NO_DURATION}};
+    if (!existRoute(routeid) || !existStop(stopid)) {
+        return {{NO_TIME, NO_DURATION}};
+    }
+
+    stops_vec stops = routes_map_[routeid].stops;
+    auto it = std::find(stops.begin(), stops.end(), stopid);
+    if (it == stops.end()) {
+        return {{NO_TIME, NO_DURATION}};
+    }
+
+    Duration duration = 0;
+    std::vector<std::pair<Time, Duration>> return_vec = {};
+    Stop cur_stop = stops_map_[stopid];
+    if (it + 1 == stops.end()) {
+        for (auto time : cur_stop.time_tables[routeid]) {
+            return_vec.push_back({time, duration});
+        }
+    } else {
+        Stop next_stop = stops_map_[*(it+1)];
+        auto it1 = cur_stop.time_tables[routeid].begin();
+        auto it2 = next_stop.time_tables[routeid].begin();
+        while (true) {
+            duration = *it2 - *it1;
+            return_vec.push_back({*it1, duration});
+            if (it1 == cur_stop.time_tables[routeid].end()) {
+                break;
+            }
+        }
+    }
+
+    return return_vec;
 }
 
 std::vector<std::tuple<StopID, RouteID, Time> > Datastructures::journey_earliest_arrival(StopID fromstop, StopID tostop, Time starttime)
