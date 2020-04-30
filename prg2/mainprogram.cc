@@ -242,7 +242,7 @@ void MainProgram::test_region_name()
 {
     if (random_stops_added_ > 0)
     {
-        auto regid = n_to_strid(random<decltype(random_stops_added_)>(0, (random_stops_added_-1)/10+1));
+        auto regid = n_to_regid(random<decltype(random_stops_added_)>(0, (random_stops_added_-1)/10+1));
         ds_.get_region_name(regid);
     }
 }
@@ -467,7 +467,7 @@ void MainProgram::test_region_bounding_box()
 {
     if (random_stops_added_ > 0) // Don't do anything if there's no stops
     {
-        auto regid = n_to_strid(random<decltype(random_stops_added_)>(0, (random_stops_added_-1)/10+1));
+        auto regid = n_to_regid(random<decltype(random_stops_added_)>(0, (random_stops_added_-1)/10+1));
         ds_.region_bounding_box(regid);
     }
 }
@@ -576,6 +576,16 @@ MainProgram::CmdResult MainProgram::cmd_route_stops(std::ostream& output, MainPr
     return {ResultType::JOURNEY, CmdResultJourney{result}};
 }
 
+
+void MainProgram::test_route_stops()
+{
+    if (random_routes_added_ > 0)
+    {
+        RouteID id = n_to_routeid(random<decltype(random_routes_added_)>(0, random_routes_added_));
+        ds_.route_stops(id);
+    }
+}
+
 MainProgram::CmdResult MainProgram::cmd_remove_stop(std::ostream& output, MatchIter begin, MatchIter end)
 {
     string stopidstr = *begin++;
@@ -621,18 +631,18 @@ void MainProgram::add_random_stops_regions(unsigned int size, Coord min, Coord m
         // Add a new region for every 10 stops
         if (random_stops_added_ % 10 == 0)
         {
-            auto regidname = n_to_strid(random_stops_added_ / 10);
+            auto regidname = n_to_regid(random_stops_added_ / 10);
             ds_.add_region(regidname, regidname);
             // Add region as subregion for some earlier region
             if (random_stops_added_/10 > 0)
             {
-                auto parentid = n_to_strid(random<decltype(random_stops_added_)>(0, random_stops_added_/10));
+                auto parentid = n_to_regid(random<decltype(random_stops_added_)>(0, random_stops_added_/10));
                 ds_.add_subregion_to_region(regidname, parentid);
             }
         }
 
         // Add stop to a region that has already been created
-        auto regid = n_to_strid(random<decltype(random_stops_added_)>(0, random_stops_added_/10+1));
+        auto regid = n_to_regid(random<decltype(random_stops_added_)>(0, random_stops_added_/10+1));
         ds_.add_stop_to_region(id, regid);
 
         ++random_stops_added_;
@@ -907,31 +917,54 @@ MainProgram::CmdResult MainProgram::cmd_random_route_trips(std::ostream& output,
 
 void MainProgram::test_random_route_trips()
 {
-    if (random_stops_added_ > 0) // Don't do anything if there's no stops
+    int const TRIPS = 5;
+    int const STOPS = 5;
+
+    if (random_stops_added_ > 1) // Don't do anything if there isn't at least two stops
     {
-        RouteID routeid = convert_to_string(random(0, 1000000));
+        RouteID routeid = n_to_routeid(random_routes_added_);
         std::vector<StopID> stops;
-        std::vector<Time> times1;
-        std::vector<Time> times2;
+        stops.reserve(STOPS);
+        std::vector<std::vector<Time>> trips(TRIPS);
+        std::vector<Time> times;
+        times.reserve(TRIPS);
 
-        Time time1 = random(0, 24*3600);
-        Time time2 = random(0, 24*3600);
-        for (auto i=0; i<5; ++i)
+        for (int i=0; i<TRIPS; ++i)
         {
-            StopID id = n_to_id(random<decltype(random_stops_added_)>(0, random_stops_added_));
-            stops.push_back(id);
-            times1.push_back(time1);
-            times2.push_back(time2);
-
-            Duration duration = random(0, 3600);
-            time1 += duration;
-            time2 += duration;
-            if (time1 > 24*3600 || time2 > 24*3600) { break; }
+            times.push_back(random(0, 24*3600));
         }
 
-        ds_.add_route(routeid, stops);
-        ds_.add_trip(routeid, times1);
-        ds_.add_trip(routeid, times2);
+        for (int i=0; i<STOPS; ++i)
+        {
+            StopID id = n_to_id(random<decltype(random_stops_added_)>(0, random_stops_added_));
+
+            if (std::find(stops.begin(), stops.end(), id) == stops.end())
+            {
+                stops.push_back(id);
+
+                Duration duration = random(0, 3600);
+                bool stop = false;
+                for (int j=0; j<TRIPS; ++j)
+                {
+                    trips[j].push_back(times[j]);
+                    times[j] += duration;
+                    if (times[j] > 24*3600) { stop = true; }
+                }
+
+                if (stop) { break; }
+            }
+        }
+
+        if (stops.size() > 1)
+        {
+            ds_.add_route(routeid, stops);
+            for (auto& trip : trips)
+            {
+                ds_.add_trip(routeid, trip);
+            }
+        }
+
+        ++random_routes_added_;
     }
 }
 
@@ -1129,6 +1162,10 @@ MainProgram::CmdResult MainProgram::cmd_journey_any(std::ostream& output, MainPr
     {
         output << "No journey found!" << endl;
     }
+    else if (steps.front() == make_tuple(NO_STOP, NO_ROUTE, NO_DISTANCE))
+    {
+        output << "Starting or destination stop not found!" << endl;
+    }
     else
     {
         auto [stop, route, dist] = steps.front();
@@ -1177,6 +1214,10 @@ MainProgram::CmdResult MainProgram::cmd_journey_shortest_distance(std::ostream& 
     {
         output << "No journey found!" << endl;
     }
+    else if (steps.front() == make_tuple(NO_STOP, NO_ROUTE, NO_DISTANCE))
+    {
+        output << "Starting or destination stop not found!" << endl;
+    }
     else
     {
         auto [stop, route, dist] = steps.front();
@@ -1220,6 +1261,10 @@ MainProgram::CmdResult MainProgram::cmd_journey_least_stops(std::ostream& output
     {
         output << "No journey found!" << endl;
     }
+    else if (steps.front() == make_tuple(NO_STOP, NO_ROUTE, NO_DISTANCE))
+    {
+        output << "Starting or destination stop not found!" << endl;
+    }
     else
     {
         auto [stop, route, dist] = steps.front();
@@ -1260,6 +1305,10 @@ MainProgram::CmdResult MainProgram::cmd_journey_with_cycle(std::ostream& output,
     if (steps.empty())
     {
         output << "No journey found!" << endl;
+    }
+    else if (steps.front() == make_tuple(NO_STOP, NO_ROUTE, NO_DISTANCE))
+    {
+        output << "Starting stop not found!" << endl;
     }
     else
     {
@@ -1395,6 +1444,10 @@ MainProgram::CmdResult MainProgram::cmd_journey_earliest_arrival(std::ostream& o
     {
         output << "No journey found!" << endl;
     }
+    else if (steps.front() == make_tuple(NO_STOP, NO_ROUTE, NO_TIME))
+    {
+        output << "Starting or destination stop not found!" << endl;
+    }
     else
     {
         auto [stop, route, time] = steps.front();
@@ -1478,7 +1531,7 @@ vector<MainProgram::CmdInfo> MainProgram::cmds_ =
     {"add_subregion_to_region", "SubregionID RegionID", regidx+wsx+regidx, &MainProgram::cmd_add_subregion_to_region, nullptr },
     {"all_routes", "", "", &MainProgram::cmd_all_routes, nullptr },
     {"add_route", "RouteID StopID1 StopID2...", routeidx+"((?:"+wsx+"[0-9]+)+)", &MainProgram::cmd_add_route, nullptr },
-    {"route_stops", "RouteID", routeidx, &MainProgram::cmd_route_stops, nullptr },
+    {"route_stops", "RouteID", routeidx, &MainProgram::cmd_route_stops, &MainProgram::test_route_stops },
     {"routes_from", "StopID", stpidx, &MainProgram::cmd_routes_from, &MainProgram::test_routes_from },
     {"route_times_from", "RouteID StopID", routeidx+wsx+stpidx, &MainProgram::cmd_route_times_from, nullptr },
     {"clear_routes", "", "", &MainProgram::cmd_clear_routes, nullptr },
@@ -1641,7 +1694,7 @@ MainProgram::CmdResult MainProgram::cmd_perftest(std::ostream& output, MatchIter
         // Add random routes
         for (unsigned int i = 0; i < n / 1000; ++i)
         {
-            for (unsigned int j=0; j<1000/15; ++j)
+            for (unsigned int j=0; j<1000/2; ++j)
             {
                 test_random_route_trips();
             }
@@ -1663,7 +1716,7 @@ MainProgram::CmdResult MainProgram::cmd_perftest(std::ostream& output, MatchIter
         }
         if (stop) { break; }
 
-        for (unsigned int j=0; j< (n % 1000)/15; ++j)
+        for (unsigned int j=0; j< (n % 1000)/2; ++j)
         {
             test_random_route_trips();
         }
@@ -2049,6 +2102,7 @@ void MainProgram::init_primes()
     prime1_ = primes1[random<int>(0, primes1.size())];
     prime2_ = primes2[random<int>(0, primes2.size())];
     random_stops_added_ = 0;
+    random_routes_added_ = 0;
 }
 
 string MainProgram::n_to_name(unsigned long n)
@@ -2066,7 +2120,7 @@ string MainProgram::n_to_name(unsigned long n)
     return name;
 }
 
-string MainProgram::n_to_strid(unsigned long n)
+string MainProgram::n_to_regid(unsigned long n)
 {
  unsigned long int hash = prime1_*n + prime2_;
  string name = "Reg";
@@ -2079,6 +2133,13 @@ string MainProgram::n_to_strid(unsigned long n)
  }
 
  return name;
+}
+
+string MainProgram::n_to_routeid(unsigned long n)
+{
+ std::ostringstream ostr;
+ ostr << "R" << n;
+ return ostr.str();
 }
 
 StopID MainProgram::n_to_id(unsigned long int n)

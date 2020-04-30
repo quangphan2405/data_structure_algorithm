@@ -59,9 +59,11 @@ private:
     unsigned long int prime1_ = 0; // Will be initialized to random value from above
     unsigned long int prime2_ = 0; // Will be initialized to random value from above
     unsigned long int random_stops_added_ = 0; // Counter for random stops added
+    unsigned long int random_routes_added_ = 0; // Counter for random routes added
     void init_primes();
     std::string n_to_name(unsigned long int n);
-    std::string n_to_strid(unsigned long int n);
+    std::string n_to_regid(unsigned long int n);
+    std::string n_to_routeid(unsigned long int n);
     StopID n_to_id(unsigned long int n);
 
 
@@ -154,6 +156,7 @@ private:
     void test_region_bounding_box();
     void test_stops_common_region();
     void test_routes_from();
+    void test_route_stops();
     void test_journey_any();
     void test_journey_least_stops();
     void test_journey_shortest_distance();

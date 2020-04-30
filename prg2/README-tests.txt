@@ -14,6 +14,10 @@ Correctness tests:
 - Tretest-*-in/out.txt: Somewhat bigger tests with real Tampere centre information
 
 Performance tests:
-- ...coming
+- perftest-compulsory.txt: Tests adding routes, routes_from and route_any
+- perftest-journey_least_stops.txt: Tests journey_least_stops
+- perftest-journey_with_cycle.txt: Tests journey_with_cycle
+- perftest-journey_shortest_distance.txt: Tests journey_shortest_distance
+- perftest-journey_earliest_arrival.txt: Tests journey_earliest_arrival
 
 More info on testing on the course web pages!
