@@ -648,16 +648,19 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_short
     if (!existStop(fromstop) || !existStop(tostop)) {
         return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
     }
-
+    typedef std::pair<StopID, Distance> cost;
     parent_map parent = {};
     std::unordered_map<StopID, Distance> distances = {};
     std::unordered_map<StopID, Distance> f_scores = {};
-    auto cmp = [f_scores] (StopID a, StopID b) mutable { return f_scores[a] >= f_scores[b]; };
+    auto cmp = [f_scores] (StopID a, StopID b) mutable { return f_scores[a] < f_scores[b]; };
     std::priority_queue<StopID, std::vector<StopID>, decltype(cmp)> frontier(cmp);
+
+//    auto comp = [] (cost p1, cost p2) { return p1.second<p2.second; };
+//    std::priority_queue<cost, std::vector<cost>, decltype (comp)> border(comp);
 
     for (auto pair : stops_map_) {
         distances[pair.first] = std::numeric_limits<int>::max();
-        f_scores[pair.first] = std::numeric_limits<int>::max();
+        // f_scores[pair.first] = std::numeric_limits<int>::max();
     }
     distances[fromstop] = 0;
     f_scores[fromstop] = getDistance(fromstop, tostop);
@@ -666,7 +669,6 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_short
     while (!frontier.empty()) {
         StopID cur_stop = frontier.top();
         frontier.pop();
-        std::cout << cur_stop << std::endl;
 
         if (cur_stop == tostop) {
             break;
@@ -678,7 +680,7 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_short
                 continue;
             }
             Distance new_dist = distances[cur_stop] + getDistance(cur_stop, next_stop);
-            if (distances.find(next_stop) == distances.end() || new_dist < distances[next_stop]) {
+            if (new_dist < distances[next_stop]) {
                 distances[next_stop] = new_dist;
                 Distance priority = new_dist + getDistance(next_stop, tostop);
                 f_scores[next_stop] = priority;
