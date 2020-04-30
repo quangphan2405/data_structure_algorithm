@@ -645,8 +645,60 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_with_
 
 std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_shortest_distance(StopID fromstop, StopID tostop)
 {
-    // Replace this comment and the line below with your implementation
-    return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
+    if (!existStop(fromstop) || !existStop(tostop)) {
+        return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
+    }
+
+    parent_map parent = {};
+    std::unordered_map<StopID, Distance> distances = {};
+    std::unordered_map<StopID, Distance> f_scores = {};
+    auto cmp = [f_scores] (StopID a, StopID b) mutable { return f_scores[a] >= f_scores[b]; };
+    std::priority_queue<StopID, std::vector<StopID>, decltype(cmp)> frontier(cmp);
+
+    for (auto pair : stops_map_) {
+        distances[pair.first] = std::numeric_limits<int>::max();
+        f_scores[pair.first] = std::numeric_limits<int>::max();
+    }
+    distances[fromstop] = 0;
+    f_scores[fromstop] = getDistance(fromstop, tostop);
+    frontier.push(fromstop);
+
+    while (!frontier.empty()) {
+        StopID cur_stop = frontier.top();
+        frontier.pop();
+        std::cout << cur_stop << std::endl;
+
+        if (cur_stop == tostop) {
+            break;
+        }
+
+        for (auto pair : stops_map_[cur_stop].routes) {
+            StopID next_stop = pair.second.second;
+            if (next_stop == NO_STOP) {
+                continue;
+            }
+            Distance new_dist = distances[cur_stop] + getDistance(cur_stop, next_stop);
+            if (distances.find(next_stop) == distances.end() || new_dist < distances[next_stop]) {
+                distances[next_stop] = new_dist;
+                Distance priority = new_dist + getDistance(next_stop, tostop);
+                f_scores[next_stop] = priority;
+                frontier.push(next_stop);
+                parent[next_stop] = {pair.first, cur_stop};
+            }
+        }
+    }
+    if (parent.find(tostop) == parent.end()) {
+        return {};
+    }
+    std::vector<std::pair<RouteID, StopID>> path = {};
+    StopID current = tostop;
+    while (current != fromstop) {
+        path.push_back({parent[current].first, parent[current].second});
+        current = parent[current].second;
+    }
+    reverse(path.begin(), path.end());
+    path.push_back({NO_ROUTE, tostop});
+    return getTuple(&path);
 }
 
 bool Datastructures::add_trip(RouteID routeid, std::vector<Time> const& stop_times)
@@ -768,6 +820,7 @@ bool Datastructures::compCoord(Coord c1, Coord c2, Coord root) {
     int d_c2 = (c2.x - root.x)*(c2.x - root.x) + (c2.y - root.y)*(c2.y - root.y);
 
     // Coordinate with smaller distance or similar distance but smaller
+
     // relative y-coordinate comes first.
     if ((d_c1 < d_c2) || ((d_c1 == d_c2) && (c1.y - root.y < c2.y - root.y))) { return true; }
     else { return false; }
