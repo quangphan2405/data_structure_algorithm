@@ -626,7 +626,7 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_with_
     bool found = DFS(&visited, &parent, fromstop, &cycle_pair);
 
     if (!found) {
-        return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
+        return {};
     }
     StopID cur_stop = std::get<1>(cycle_pair);
     std::vector<std::pair<RouteID, StopID>> path = {};
