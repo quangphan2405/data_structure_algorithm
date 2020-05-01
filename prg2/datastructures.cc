@@ -905,10 +905,6 @@ std::vector<std::pair<RouteID, StopID>> Datastructures::bi_dirPath(parent_map *f
     std::vector<std::pair<RouteID, StopID>> path;
     //path.push_back(intersectNode);
     StopID id = intersectNode;
-    for (auto pair : *fw_parent) {
-        std::cout << "from " <<pair.first << " to " << pair.second.second << " on route " << pair.second.first << std::endl;
-    }
-    std::cout << "now bw" << std::endl;
     while (id != fromstop) {
         path.push_back({(*fw_parent)[id].first, (*fw_parent)[id].second});
         id = (*fw_parent)[id].second;
@@ -916,10 +912,6 @@ std::vector<std::pair<RouteID, StopID>> Datastructures::bi_dirPath(parent_map *f
     reverse(path.begin(), path.end());
     id = intersectNode;
     path.push_back({(*bw_parent)[intersectNode].first, intersectNode});
-    for (auto pair : *bw_parent) {
-        std::cout << "from " <<pair.first << " to " << pair.second.second << " on route " << pair.second.first << std::endl;
-    }
-    std::cout << "End" << std::endl;
     while(id != tostop) {
         // path.push_back({(*bw_parent)[id].first, (*bw_parent)[id].second});
         path.push_back({(*bw_parent)[(*bw_parent)[id].second].first, (*bw_parent)[id].second});
