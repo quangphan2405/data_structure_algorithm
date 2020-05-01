@@ -883,6 +883,12 @@ bool Datastructures::DFS(stops_vec *visited, std::unordered_map<StopID, std::pai
         if (adj_id == NO_STOP) {
             continue;
         }
+
+        if (parent->find(adj_id) != parent->end() && (*parent)[adj_id].second != cur_stop) {
+            *return_pair = {pair.first, cur_stop, adj_id};
+            return true;
+        }
+
         if (std::find(visited->begin(), visited->end(), adj_id) == visited->end()) {
             // set current as parent of this vertex
             (*parent)[adj_id] = {pair.first, cur_stop};
@@ -892,9 +898,6 @@ bool Datastructures::DFS(stops_vec *visited, std::unordered_map<StopID, std::pai
             if (found) {
                 return true;
             }
-        } else {
-            *return_pair = {pair.first, cur_stop, adj_id};
-            return true;
         }
     }
     return false;

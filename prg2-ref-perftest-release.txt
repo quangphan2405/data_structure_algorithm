@@ -1,0 +1,112 @@
+> read "perftest-all.txt" 
+** Commands from 'perftest-all.txt'
+> # Read performance tests of all operations
+> read "perftest-compulsory.txt"
+** Commands from 'perftest-compulsory.txt'
+> # Test the performance of adding and accessing routes
+> perftest routes_from;journey_any;random_route_trips 20 500 10;30;100;300;1000;3000;10000;30000;100000;300000;1000000
+Timeout for each N is 20 sec. 
+For each N perform 500 random command(s) from:
+routes_from journey_any random_route_trips 
+
+      N ,    add (sec) ,   cmds (sec) ,  total (sec)
+     10 ,   8.7627e-05 ,   0.00152236 ,   0.00160999
+     30 ,   9.9426e-05 ,   0.00151329 ,   0.00161272
+    100 ,  0.000361419 ,   0.00213128 ,    0.0024927
+    300 ,   0.00101959 ,   0.00363839 ,   0.00465799
+   1000 ,    0.0274881 ,    0.0233123 ,    0.0508004
+   3000 ,    0.0376857 ,       0.0305 ,    0.0681858
+  10000 ,    0.0766014 ,     0.118861 ,     0.195463
+  30000 ,     0.278366 ,     0.705134 ,     0.983501
+ 100000 ,     0.751964 ,      7.41932 ,      8.17128
+ 300000 ,      2.72265 ,      16.9018 ,      19.6245
+1000000 ,      9.50711 , Timeout!
+> 
+** End of commands from 'perftest-compulsory.txt'
+> read "perftest-journey_least_stops.txt"
+** Commands from 'perftest-journey_least_stops.txt'
+> # Test the performance of journey_least_stops
+> perftest journey_least_stops 20 500 10;30;100;300;1000;3000;10000;30000;100000;300000;1000000
+Timeout for each N is 20 sec. 
+For each N perform 500 random command(s) from:
+journey_least_stops 
+
+      N ,    add (sec) ,   cmds (sec) ,  total (sec)
+     10 ,   5.7032e-05 ,  0.000272128 ,   0.00032916
+     30 ,  0.000121748 ,    0.0005607 ,  0.000682448
+    100 ,  0.000400235 ,   0.00161477 ,   0.00201501
+    300 ,   0.00115689 ,   0.00506351 ,    0.0062204
+   1000 ,    0.0253083 ,    0.0204847 ,     0.045793
+   3000 ,    0.0281625 ,     0.135617 ,      0.16378
+  10000 ,    0.0668909 ,     0.359012 ,     0.425903
+  30000 ,      0.17429 ,      1.67556 ,      1.84985
+ 100000 ,     0.663775 ,      12.9257 ,      13.5895
+ 300000 ,      2.48554 , Timeout!
+> 
+** End of commands from 'perftest-journey_least_stops.txt'
+> read "perftest-journey_with_cycle.txt"
+** Commands from 'perftest-journey_with_cycle.txt'
+> # Test the performance of journey_with_cycle
+> perftest journey_with_cycle 20 500 10;30;100;300;1000;3000;10000;30000;100000;300000;1000000
+Timeout for each N is 20 sec. 
+For each N perform 500 random command(s) from:
+journey_with_cycle 
+
+      N ,    add (sec) ,   cmds (sec) ,  total (sec)
+     10 ,   4.1889e-05 ,  0.000165932 ,  0.000207821
+     30 ,  0.000125664 ,  0.000530512 ,  0.000656176
+    100 ,  0.000410622 ,    0.0010765 ,   0.00148712
+    300 ,    0.0161905 ,   0.00274635 ,    0.0189369
+   1000 ,   0.00347622 ,    0.0274777 ,    0.0309539
+   3000 ,    0.0157216 ,    0.0462709 ,    0.0619925
+  10000 ,    0.0634049 ,     0.113624 ,     0.177029
+  30000 ,     0.176751 ,     0.338583 ,     0.515334
+ 100000 ,     0.593648 ,      3.86753 ,      4.46118
+ 300000 ,      2.14639 ,      9.79754 ,      11.9439
+1000000 ,      9.26307 , Timeout!
+> 
+** End of commands from 'perftest-journey_with_cycle.txt'
+> read "perftest-journey_shortest_distance.txt"
+** Commands from 'perftest-journey_shortest_distance.txt'
+> # Test the performance of journey_shortest_distance
+> perftest journey_shortest_distance 20 500 10;30;100;300;1000;3000;10000;30000;100000;300000;1000000
+Timeout for each N is 20 sec. 
+For each N perform 500 random command(s) from:
+journey_shortest_distance 
+
+      N ,    add (sec) ,   cmds (sec) ,  total (sec)
+     10 ,   5.5566e-05 ,  0.000404323 ,  0.000459889
+     30 ,   0.00013217 ,  0.000750879 ,  0.000883049
+    100 ,   0.00038696 ,   0.00329858 ,   0.00368554
+    300 ,   0.00111505 ,     0.028545 ,    0.0296601
+   1000 ,   0.00355651 ,    0.0628204 ,     0.066377
+   3000 ,    0.0325392 ,     0.181171 ,      0.21371
+  10000 ,     0.078659 ,     0.661483 ,     0.740142
+  30000 ,     0.195708 ,      3.43464 ,      3.63035
+ 100000 ,     0.632984 , Timeout!
+> 
+** End of commands from 'perftest-journey_shortest_distance.txt'
+> read "perftest-journey_earliest_arrival.txt"
+** Commands from 'perftest-journey_earliest_arrival.txt'
+> # Test the performance of journey_earliest_arrival
+> perftest journey_earliest_arrival 20 500 10;30;100;300;1000;3000;10000;30000;100000;300000;1000000
+Timeout for each N is 20 sec. 
+For each N perform 500 random command(s) from:
+journey_earliest_arrival 
+
+      N ,    add (sec) ,   cmds (sec) ,  total (sec)
+     10 ,   5.9202e-05 ,  0.000734709 ,  0.000793911
+     30 ,  0.000109408 ,   0.00123385 ,   0.00134325
+    100 ,  0.000394136 ,    0.0333133 ,    0.0337075
+    300 ,    0.0011095 ,    0.0395032 ,    0.0406127
+   1000 ,    0.0128878 ,    0.0703378 ,    0.0832256
+   3000 ,    0.0296232 ,     0.112753 ,     0.142377
+  10000 ,    0.0663319 ,     0.328632 ,     0.394964
+  30000 ,     0.187629 ,      2.16854 ,      2.35617
+ 100000 ,     0.987151 ,      7.17722 ,      8.16437
+ 300000 ,      2.22027 ,        11.12 ,      13.3403
+1000000 ,      9.44436 , Timeout!
+> 
+** End of commands from 'perftest-journey_earliest_arrival.txt'
+> 
+** End of commands from 'perftest-all.txt'
