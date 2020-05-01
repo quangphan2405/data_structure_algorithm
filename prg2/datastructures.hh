@@ -32,6 +32,7 @@ enum COLOR {white, black};
 
 // Return value for cases where integer values were not found
 int const NO_VALUE = std::numeric_limits<int>::min();
+int const MAX      = std::numeric_limits<int>::max();
 
 // Return value for cases where name values were not found
 Name const NO_NAME = "!!NO_NAME!!";
@@ -100,7 +101,7 @@ struct Region
 
 struct Route
 {
-    std::vector<StopID> stops;
+    std::unordered_map<StopID, std::set<Time>> stops;
 };
 
 
@@ -272,12 +273,12 @@ public:
 
 private:
     // Add stuff needed for your class implementation here
-    std::unordered_map<StopID, bool> visited_map_ = {};
     std::unordered_map<StopID, Stop> stops_map_ = {};
     std::multimap<Name, StopID> names_map_ = {};
     std::multimap<int, StopID> distance_map_ = {};
     std::unordered_map<RegionID, Region> regions_map_ = {};
     std::unordered_map<RouteID, Route> routes_map_ = {};
+    std::unordered_map<StopID, bool> visited_map_ = {};
     bool existStop(StopID id);
     bool existRegion(RegionID id);
     bool existRoute(RouteID id);
@@ -287,7 +288,7 @@ private:
     StopID isIntersecting(std::vector<StopID> *s_visited, std::vector<StopID> *t_visited);
     void BFS(std::list<StopID> *queue, std::vector<StopID> *visited, std::unordered_map<StopID, std::pair<RouteID, StopID>> *parent, bool flow);
     bool DFS(std::vector<StopID> *visited, std::unordered_map<StopID, std::pair<RouteID, StopID>> *parent, StopID cur_stop, std::tuple<RouteID, StopID, StopID> *return_pair);
-    std::vector<std::pair<RouteID, StopID>> bi_dirPath(std::unordered_map<StopID, std::pair<RouteID, StopID>> *s_parent, std::unordered_map<StopID, std::pair<RouteID, StopID>> *t_parent, StopID fromstop, StopID tostop, StopID intersectNode);
+    std::vector<std::pair<RouteID, StopID>> bidirPath(std::unordered_map<StopID, std::pair<RouteID, StopID>> *s_parent, std::unordered_map<StopID, std::pair<RouteID, StopID>> *t_parent, StopID fromstop, StopID tostop, StopID intersectNode);
     std::vector<std::tuple<StopID, RouteID, Distance>> getTuple(std::vector<std::pair<RouteID, StopID>> *path);
 };
 
