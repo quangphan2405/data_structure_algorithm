@@ -648,7 +648,7 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_short
     if (!existStop(fromstop) || !existStop(tostop)) {
         return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
     }
-    typedef std::pair<StopID, Distance> cost;
+    // typedef std::pair<StopID, Distance> cost;
     parent_map parent = {};
     std::unordered_map<StopID, Distance> distances = {};
     std::unordered_map<StopID, Distance> f_scores = {};
