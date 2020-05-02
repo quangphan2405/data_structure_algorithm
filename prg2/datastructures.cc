@@ -720,8 +720,9 @@ bool Datastructures::add_trip(RouteID routeid, std::vector<Time> const& stop_tim
     if (!existRoute(routeid) || stop_times.empty()) {
         return false;
     }
-
-    stops_vec stops = routes_map_[routeid].stops;
+    Route& route = routes_map_[routeid];
+    stops_vec stops = route.stops;
+    auto& time_stops = route.stop_times_by_stops;
     if (stop_times.size() != stops.size()) {
         return false; // Departure time must be given to all stops in route.
     }
@@ -729,14 +730,18 @@ bool Datastructures::add_trip(RouteID routeid, std::vector<Time> const& stop_tim
     // Add departure time to each stop property.
     auto it1 = stops.begin();
     auto it2 = stop_times.begin();
+    auto it3 = time_stops.begin();
     while (true) {
         stops_map_[*it1].time_tables[routeid].insert(*it2);
+        it3->insert(*it2);
         it1++;
         it2++;
+        it3++;
         if (it1 == stops.end()) {
             break;
         }
     }
+    routes_map_[routeid].stop_times_by_trips.push_back(stop_times);
     return true;
 }
 
@@ -780,14 +785,81 @@ std::vector<std::tuple<StopID, RouteID, Time> > Datastructures::journey_earliest
     if (!existStop(fromstop) || !existStop(tostop)) {
         return {{NO_STOP, NO_ROUTE, NO_TIME}};
     }
+    std::vector<Time> target_labels;
 
     std::vector<StopID> visited = {};
     std::unordered_map<StopID, Time> prev_earliest_arrival_time;
     std::unordered_map<StopID, Time> earliest_arrival_time;
     std::unordered_map<RouteID, StopID> queue = {};
+    bool improved = false;
 
+    // Initialization
     prev_earliest_arrival_time[fromstop] = starttime;
     earliest_arrival_time[fromstop] = starttime;
+    visited.push_back(fromstop);
+
+    //target_labels.push_back(earliest_arrival_time[tostop]);
+
+    unsigned int round = 0;
+    while (true) {
+        ++round;
+
+        // First stage, copy earliest arrival time to previous round.
+        queue.clear();
+        for (const auto& stopid : visited) {
+            std::vector<RouteID> routes = {};
+            for (auto& pair : stops_map_[stopid].routes) {
+                routes.push_back(pair.first);
+            }
+            for (RouteID routeid : routes) {
+                stops_vec cur_route_stops = routes_map_[routeid].stops;
+                auto cur_stop_pos = std::find(cur_route_stops.begin(), cur_route_stops.end(), stopid);
+                if (queue.find(routeid) != queue.end()) {
+                    auto stop_in_queue_pos = std::find(cur_route_stops.begin(), cur_route_stops.end(), queue[routeid]);
+                    if (stop_in_queue_pos > cur_stop_pos && stop_in_queue_pos != cur_route_stops.end()) {
+                        queue[routeid] = stopid;
+                    }
+                } else {
+                    queue[routeid] = stopid;
+                }
+            }
+            visited.erase(std::find(visited.begin(), visited.end(), stopid));
+        }
+        visited.clear();
+
+        // Second stage
+
+        // Traverse each route
+        for (const auto& route_stop : queue) {
+            const RouteID& routeid = route_stop.first;
+            const StopID& stopid = route_stop.second;
+            auto& route_stops = routes_map_[routeid].stops;
+            auto it = std::find(route_stops.begin(), route_stops.end(), stopid);
+
+//            auto& times_by_trips = routes_map_[routeid].stop_times_by_trips;
+//            std::sort(times_by_trips.begin(), times_by_trips.end(), [](std::vector<Time> t1, std::vector<Time> t2)
+//            { return *t1.begin() < *t2.begin(); });
+//            auto trip = times_by_trips.begin();
+
+            while (it != route_stops.end()) {
+                int stop_pos = it - route_stops.begin();
+                std::set<Time> times_stopid = *(routes_map_[routeid].stop_times_by_stops.begin() + stop_pos);
+                auto dep = times_stopid.lower_bound(std::min(earliest_arrival_time[*it], earliest_arrival_time[tostop]));
+
+                if (dep == times_stopid.end()) {
+                    it++; continue;
+                } else {
+                    earliest_arrival_time[*it] = *dep;
+                    visited.push_back(*it);
+                    improved = true;
+                }
+            }
+        }
+        target_labels.push_back(earliest_arrival_time[tostop]);
+        if (!improved) {
+            break;
+        }
+    }
 
 
     return {{NO_STOP, NO_ROUTE, NO_TIME}};
@@ -950,7 +1022,30 @@ std::vector<std::pair<RouteID, StopID>> Datastructures::bidirPath(parent_map *fw
     return path;
 }
 
+std::unordered_map<RouteID, StopID> Datastructures::RAPTOR_queue(std::vector<StopID> *visited) {
+    std::unordered_map<RouteID, StopID> queue;
+    for (const auto& stop_pair : stops_map_) {
+        const StopID& stopid = stop_pair.first;
+        const Stop& stop = stop_pair.second;
 
+        if (std::find(visited->begin(), visited->end(), stopid) != visited->end()) {
+            for (const auto& route_pair : stop.routes) {
+                const RouteID& routeid = route_pair.first;
+                const auto& it = queue.find(routeid);
+                if (it != queue.end()) {
+                    const auto& p = it->second;
+                    const auto& route_stops = routes_map_[routeid].stops;
+                    if (std::find(route_stops.begin(), route_stops.end(), stopid)
+                        < std::find(route_stops.begin(), route_stops.end(), p)) {
+                        queue[routeid] = stopid;
+                    }
+                } else {
+                    queue[routeid] = stopid;
+                }
+            }
+        }
+    }
+}
 
 return_tuple Datastructures::getTuple(std::vector<std::pair<RouteID, StopID>> *path) {
     Distance distance = 0;
