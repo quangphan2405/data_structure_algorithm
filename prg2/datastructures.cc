@@ -36,6 +36,7 @@ using return_tuple = std::vector<std::tuple<StopID, RouteID, Distance>>;
 
 Datastructures::Datastructures()
 {
+    all_stops_    = {};
     stops_map_    = {};
     names_map_    = {};
     distance_map_ = {};
@@ -60,6 +61,7 @@ int Datastructures::stop_count()
 
 void Datastructures::clear_all()
 {
+    all_stops_.clear();
     stops_map_.clear();
     names_map_.clear();
     distance_map_.clear();
@@ -70,14 +72,14 @@ void Datastructures::clear_all()
 
 std::vector<StopID> Datastructures::all_stops()
 {
-    if (stops_map_.empty()) {
+    if (all_stops_.empty()) {
         return {};
     }
-    std::vector<StopID> stops = {};
-    for (auto &pair : stops_map_) {
-        stops.push_back(pair.first); // Get StopIDs.
-    }
-    return stops;
+//    std::vector<StopID> stops = {};
+//    for (auto &pair : stops_map_) {
+//        stops.push_back(pair.first); // Get StopIDs.
+//    }
+    return all_stops_;
 }
 
 bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
@@ -88,6 +90,7 @@ bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
         // Initially stop does not belong to any region.
         Stop new_stop  = {name, xy, "", {}, {}, false};
         int distance   = xy.x*xy.x + xy.y*xy.y;
+        all_stops_.push_back(id);
         stops_map_[id] = new_stop;
         names_map_.insert({name, id});
         distance_map_.insert({distance, id});
@@ -515,9 +518,9 @@ bool Datastructures::add_route(RouteID id, std::vector<StopID> stops)
             stops_map_[*it].routes[id] = {*(it-1), *(it+1)}; // Connecting stop.
         }
     }
-    std::unordered_map<StopID, std::set<Time>> stops_route = {};
+    std::vector<std::pair<StopID, std::set<Time>>> stops_route = {};
     for (auto it = stops.begin(); it != stops.end(); it++) {
-        stops_route[*it] = {};
+        stops_route.push_back({*it, {}});
     }
     routes_map_[id] = {stops_route};
     return true;
@@ -743,7 +746,7 @@ std::vector<std::pair<Time, Duration>> Datastructures::route_times_from(RouteID 
         return {{NO_TIME, NO_DURATION}};
     }
 
-    stops_vec stops = routes_map_[routeid].stops;
+    auto stops = routes_map_[routeid].stops;
     auto it = std::find(stops.begin(), stops.end(), stopid);
     if (it == stops.end()) {
         return {{NO_TIME, NO_DURATION}};
@@ -774,7 +777,19 @@ std::vector<std::pair<Time, Duration>> Datastructures::route_times_from(RouteID 
 
 std::vector<std::tuple<StopID, RouteID, Time> > Datastructures::journey_earliest_arrival(StopID fromstop, StopID tostop, Time starttime)
 {
-    // Replace this comment and the line below with your implementation
+    if (!existStop(fromstop) || !existStop(tostop)) {
+        return {{NO_STOP, NO_ROUTE, NO_TIME}};
+    }
+
+    std::vector<StopID> visited = {};
+    std::unordered_map<StopID, Time> prev_earliest_arrival_time;
+    std::unordered_map<StopID, Time> earliest_arrival_time;
+    std::unordered_map<RouteID, StopID> queue = {};
+
+    prev_earliest_arrival_time[fromstop] = starttime;
+    earliest_arrival_time[fromstop] = starttime;
+
+
     return {{NO_STOP, NO_ROUTE, NO_TIME}};
 }
 

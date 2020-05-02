@@ -101,7 +101,7 @@ struct Region
 
 struct Route
 {
-    std::unordered_map<StopID, std::set<Time>> stops;
+    std::vector<StopID> stops;
 };
 
 
@@ -273,6 +273,7 @@ public:
 
 private:
     // Add stuff needed for your class implementation here
+    std::vector<StopID> all_stops_ = {};
     std::unordered_map<StopID, Stop> stops_map_ = {};
     std::multimap<Name, StopID> names_map_ = {};
     std::multimap<int, StopID> distance_map_ = {};
