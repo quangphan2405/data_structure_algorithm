@@ -518,11 +518,12 @@ bool Datastructures::add_route(RouteID id, std::vector<StopID> stops)
             stops_map_[*it].routes[id] = {*(it-1), *(it+1)}; // Connecting stop.
         }
     }
-    std::vector<std::pair<StopID, std::set<Time>>> stops_route = {};
+    std::vector<std::set<Time>> stops_route = {};
     for (auto it = stops.begin(); it != stops.end(); it++) {
-        stops_route.push_back({*it, {}});
+        stops_route.push_back({});
     }
-    routes_map_[id] = {stops_route};
+    Route new_route = {stops, {}, stops_route};
+    routes_map_[id] = new_route;
     return true;
 }
 
@@ -551,10 +552,7 @@ std::vector<StopID> Datastructures::route_stops(RouteID id)
     if (!existRoute(id)) {
         return {NO_STOP};
     }
-    stops_vec return_vec = {};
-    for (auto pair : routes_map_[id].stops) {
-        return_vec.push_back(pair.first);
-    }
+    stops_vec return_vec = routes_map_[id].stops;
     return return_vec;
 }
 
@@ -734,6 +732,9 @@ bool Datastructures::add_trip(RouteID routeid, std::vector<Time> const& stop_tim
     while (true) {
         stops_map_[*it1].time_tables[routeid].insert(*it2);
         it3->insert(*it2);
+        if (it1 != stops.end() - 1) {
+            connections_.push_back({routeid, *it1, *(it1+1), *it2, *(it2+1)});
+        }
         it1++;
         it2++;
         it3++;
@@ -741,7 +742,6 @@ bool Datastructures::add_trip(RouteID routeid, std::vector<Time> const& stop_tim
             break;
         }
     }
-    routes_map_[routeid].stop_times_by_trips.push_back(stop_times);
     return true;
 }
 
@@ -780,89 +780,62 @@ std::vector<std::pair<Time, Duration>> Datastructures::route_times_from(RouteID 
     return return_vec;
 }
 
-std::vector<std::tuple<StopID, RouteID, Time> > Datastructures::journey_earliest_arrival(StopID fromstop, StopID tostop, Time starttime)
+std::vector<std::tuple<StopID, RouteID, Time>> Datastructures::journey_earliest_arrival(StopID fromstop, StopID tostop, Time starttime)
 {
     if (!existStop(fromstop) || !existStop(tostop)) {
         return {{NO_STOP, NO_ROUTE, NO_TIME}};
     }
-    std::vector<Time> target_labels;
+    std::unordered_map<StopID, Time> earliest_arrival = {};
+    std::unordered_map<StopID, int> in_connection = {};
+    for (auto& stopid : all_stops_) {
+        earliest_arrival[stopid] = MAX_VALUE;
+        in_connection[stopid] = MAX_VALUE;
+        std::cout << stopid << std::endl;
+    }
+    earliest_arrival[fromstop] = starttime;
+    Time earliest = MAX_VALUE;
+    std::cout << earliest << std::endl;
 
-    std::vector<StopID> visited = {};
-    std::unordered_map<StopID, Time> prev_earliest_arrival_time;
-    std::unordered_map<StopID, Time> earliest_arrival_time;
-    std::unordered_map<RouteID, StopID> queue = {};
-    bool improved = false;
+    // Loop through all connections
+    for (unsigned int pos = 0; pos < connections_.size(); pos++) {
+        Connection connection = *(connections_.begin()+pos);
 
-    // Initialization
-    prev_earliest_arrival_time[fromstop] = starttime;
-    earliest_arrival_time[fromstop] = starttime;
-    visited.push_back(fromstop);
+        if (connection.departure >= earliest_arrival[connection.fromstop]
+            && connection.arrrival < earliest_arrival[connection.tostop]) {
+            earliest_arrival[tostop] = connection.arrrival;
+            in_connection[connection.tostop] = pos;
 
-    //target_labels.push_back(earliest_arrival_time[tostop]);
-
-    unsigned int round = 0;
-    while (true) {
-        ++round;
-
-        // First stage, copy earliest arrival time to previous round.
-        queue.clear();
-        for (const auto& stopid : visited) {
-            std::vector<RouteID> routes = {};
-            for (auto& pair : stops_map_[stopid].routes) {
-                routes.push_back(pair.first);
+            if (connection.tostop == tostop) {
+                earliest = std::min(earliest, connection.arrrival);
             }
-            for (RouteID routeid : routes) {
-                stops_vec cur_route_stops = routes_map_[routeid].stops;
-                auto cur_stop_pos = std::find(cur_route_stops.begin(), cur_route_stops.end(), stopid);
-                if (queue.find(routeid) != queue.end()) {
-                    auto stop_in_queue_pos = std::find(cur_route_stops.begin(), cur_route_stops.end(), queue[routeid]);
-                    if (stop_in_queue_pos > cur_stop_pos && stop_in_queue_pos != cur_route_stops.end()) {
-                        queue[routeid] = stopid;
-                    }
-                } else {
-                    queue[routeid] = stopid;
-                }
-            }
-            visited.erase(std::find(visited.begin(), visited.end(), stopid));
-        }
-        visited.clear();
-
-        // Second stage
-
-        // Traverse each route
-        for (const auto& route_stop : queue) {
-            const RouteID& routeid = route_stop.first;
-            const StopID& stopid = route_stop.second;
-            auto& route_stops = routes_map_[routeid].stops;
-            auto it = std::find(route_stops.begin(), route_stops.end(), stopid);
-
-//            auto& times_by_trips = routes_map_[routeid].stop_times_by_trips;
-//            std::sort(times_by_trips.begin(), times_by_trips.end(), [](std::vector<Time> t1, std::vector<Time> t2)
-//            { return *t1.begin() < *t2.begin(); });
-//            auto trip = times_by_trips.begin();
-
-            while (it != route_stops.end()) {
-                int stop_pos = it - route_stops.begin();
-                std::set<Time> times_stopid = *(routes_map_[routeid].stop_times_by_stops.begin() + stop_pos);
-                auto dep = times_stopid.lower_bound(std::min(earliest_arrival_time[*it], earliest_arrival_time[tostop]));
-
-                if (dep == times_stopid.end()) {
-                    it++; continue;
-                } else {
-                    earliest_arrival_time[*it] = *dep;
-                    visited.push_back(*it);
-                    improved = true;
-                }
-            }
-        }
-        target_labels.push_back(earliest_arrival_time[tostop]);
-        if (!improved) {
+        } else if (connection.arrrival > earliest) {
             break;
         }
     }
 
+    // Reconstruct the path
+    if (in_connection[tostop] == MAX_VALUE) {
+        return {};
+    } else {
+        std::vector<Connection> route = {};
+        unsigned int last_connection_pos = in_connection[tostop];
+        while (last_connection_pos != MAX_VALUE) {
+            Connection cur_connection = *(connections_.begin()+last_connection_pos);
+            route.push_back(cur_connection);
+            last_connection_pos = in_connection[cur_connection.fromstop];
+        }
+        std::reverse(route.begin(), route.end());
+        std::vector<std::tuple<StopID, RouteID, Time>> return_vec = {};
+        for (auto it = route.begin(); it != route.end(); it++) {
+            return_vec.push_back({it->fromstop, it->routeid, it->departure});
+        }
+        auto last_stop = *route.rbegin();
+        return_vec.push_back({last_stop.tostop, NO_ROUTE, last_stop.arrrival});
+        return return_vec;
+    }
 
-    return {{NO_STOP, NO_ROUTE, NO_TIME}};
+
+
 }
 
 void Datastructures::add_walking_connections()
@@ -1022,30 +995,6 @@ std::vector<std::pair<RouteID, StopID>> Datastructures::bidirPath(parent_map *fw
     return path;
 }
 
-std::unordered_map<RouteID, StopID> Datastructures::RAPTOR_queue(std::vector<StopID> *visited) {
-    std::unordered_map<RouteID, StopID> queue;
-    for (const auto& stop_pair : stops_map_) {
-        const StopID& stopid = stop_pair.first;
-        const Stop& stop = stop_pair.second;
-
-        if (std::find(visited->begin(), visited->end(), stopid) != visited->end()) {
-            for (const auto& route_pair : stop.routes) {
-                const RouteID& routeid = route_pair.first;
-                const auto& it = queue.find(routeid);
-                if (it != queue.end()) {
-                    const auto& p = it->second;
-                    const auto& route_stops = routes_map_[routeid].stops;
-                    if (std::find(route_stops.begin(), route_stops.end(), stopid)
-                        < std::find(route_stops.begin(), route_stops.end(), p)) {
-                        queue[routeid] = stopid;
-                    }
-                } else {
-                    queue[routeid] = stopid;
-                }
-            }
-        }
-    }
-}
 
 return_tuple Datastructures::getTuple(std::vector<std::pair<RouteID, StopID>> *path) {
     Distance distance = 0;

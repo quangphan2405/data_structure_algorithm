@@ -32,6 +32,7 @@ enum COLOR {white, black};
 
 // Return value for cases where integer values were not found
 int const NO_VALUE = std::numeric_limits<int>::min();
+int const MAX_VALUE = std::numeric_limits<int>::max();
 
 // Return value for cases where name values were not found
 Name const NO_NAME = "!!NO_NAME!!";
@@ -106,9 +107,13 @@ struct Route
 {
     std::vector<StopID> stops;
     std::vector<int> trips;
-    std::vector<std::vector<Time>> stop_times_by_trips;
     std::vector<std::set<Time>> stop_times_by_stops;
-    std::vector<int> stop_positions;
+};
+
+struct Connection {
+    RouteID routeid;
+    StopID fromstop, tostop;
+    Time departure, arrrival;
 };
 
 
@@ -281,6 +286,7 @@ public:
 private:
     // Add stuff needed for your class implementation here
     std::vector<StopID> all_stops_ = {};
+    std::vector<Connection> connections_ = {};
     std::unordered_map<StopID, Stop> stops_map_ = {};
     std::multimap<Name, StopID> names_map_ = {};
     std::multimap<int, StopID> distance_map_ = {};
@@ -297,7 +303,6 @@ private:
     void BFS(std::list<StopID> *queue, std::vector<StopID> *visited, std::unordered_map<StopID, std::pair<RouteID, StopID>> *parent, bool flow);
     bool DFS(std::vector<StopID> *visited, std::unordered_map<StopID, std::pair<RouteID, StopID>> *parent, StopID cur_stop, std::tuple<RouteID, StopID, StopID> *return_pair);
     std::vector<std::pair<RouteID, StopID>> bidirPath(std::unordered_map<StopID, std::pair<RouteID, StopID>> *s_parent, std::unordered_map<StopID, std::pair<RouteID, StopID>> *t_parent, StopID fromstop, StopID tostop, StopID intersectNode);
-    std::unordered_map<RouteID, StopID> RAPTOR_queue(std::vector<StopID> *visited);
     std::vector<std::tuple<StopID, RouteID, Distance>> getTuple(std::vector<std::pair<RouteID, StopID>> *path);
 };
 
