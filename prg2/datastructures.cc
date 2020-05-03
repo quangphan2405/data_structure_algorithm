@@ -661,16 +661,16 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_short
     std::unordered_map<StopID, Distance> distances = {}; // g score for each stop.
     std::unordered_map<StopID, Distance> f_scores = {}; // f = g + h.
     // A priority queue to save StopID base on f score using a cmp lambda function.
-    auto cmp = [f_scores] (StopID a, StopID b) mutable { return f_scores[a] < f_scores[b]; };
-    std::priority_queue<StopID, std::vector<StopID>, decltype(cmp)> frontier(cmp);
+    std::priority_queue<StopID, std::vector<StopID>, > frontier;
 
-    for (auto pair : stops_map_) {
-        distances[pair.first] = MAX; // Initiate g score with infinity.
+    for (auto stopid : all_stops_) {
+        distances[stopid] = MAX; // Initiate g score with infinity.
     }
     // Statistics for starting point.
     distances[fromstop] = 0;
     f_scores[fromstop] = getDistance(fromstop, tostop);
-    frontier.push(fromstop);
+    // frontier.push(fromstop);
+
 
     while (!frontier.empty()) {
         StopID cur_stop = frontier.top();
@@ -686,9 +686,9 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_short
                 continue; // Terminus stop.
             }
             Distance new_dist = distances[cur_stop] + getDistance(cur_stop, next_stop);
+            Distance priority = new_dist + getDistance(next_stop, tostop)/100;
             if (new_dist < distances[next_stop]) {
                 distances[next_stop] = new_dist; // New h score for next_stop.
-                Distance priority = new_dist + getDistance(next_stop, tostop);
                 f_scores[next_stop] = priority; // New f score for next_stop.
                 frontier.push(next_stop);
                 parent[next_stop] = {pair.first, cur_stop};
@@ -708,6 +708,7 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_short
     }
     std::reverse(path.begin(), path.end());
     path.push_back({NO_ROUTE, tostop});
+    std::cout << "end" << std::endl;
     return getTuple(&path);
 }
 
