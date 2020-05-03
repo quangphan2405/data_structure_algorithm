@@ -36,14 +36,14 @@ using return_tuple = std::vector<std::tuple<StopID, RouteID, Distance>>;
 
 Datastructures::Datastructures()
 {
-    all_stops_    = {};
-    connections_  = {};
-    stops_map_    = {};
-    names_map_    = {};
-    distance_map_ = {};
-    regions_map_  = {};
-    visited_map_  = {};
-    routes_map_   = {};
+    all_stops_       = {};
+    stops_map_       = {};
+    names_map_       = {};
+    distance_map_    = {};
+    regions_map_     = {};
+    routes_map_      = {};
+    connections_dep_ = {};
+    connections_id_  = {};
 }
 
 Datastructures::~Datastructures()
@@ -62,14 +62,14 @@ int Datastructures::stop_count()
 
 void Datastructures::clear_all()
 {
-    all_stops_.clear();
-    connections_.clear();
+    all_stops_.clear();    
     stops_map_.clear();
     names_map_.clear();
     distance_map_.clear();
     regions_map_.clear();
     routes_map_.clear();
-    visited_map_.clear();
+    connections_dep_.clear();
+    connections_id_.clear();
 }
 
 std::vector<StopID> Datastructures::all_stops()
@@ -96,7 +96,6 @@ bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
         stops_map_[id] = new_stop;
         names_map_.insert({name, id});
         distance_map_.insert({distance, id});
-        visited_map_[id] = false;
         return true;
     }
 }
@@ -520,12 +519,8 @@ bool Datastructures::add_route(RouteID id, std::vector<StopID> stops)
             stops_map_[*it].routes[id] = {*(it-1), *(it+1)}; // Connecting stop.
         }
     }
-    std::vector<std::set<Time>> stops_route = {};
-    for (auto it = stops.begin(); it != stops.end(); it++) {
-        stops_route.push_back({});
-    }
-    Route new_route = {stops, {}, stops_route};
-    routes_map_[id] = new_route;
+
+    routes_map_[id] = {stops};
     return true;
 }
 
@@ -565,8 +560,8 @@ void Datastructures::clear_routes()
         pair.second.visited = false;
     }
     routes_map_.clear();
-    visited_map_.clear();
-    connections_.clear();
+    connections_dep_.clear();
+    connections_id_.clear();
 }
 
 std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_any(StopID fromstop, StopID tostop)
@@ -722,8 +717,7 @@ bool Datastructures::add_trip(RouteID routeid, std::vector<Time> const& stop_tim
         return false;
     }
     Route& route = routes_map_[routeid];
-    stops_vec stops = route.stops;
-    auto& time_stops = route.stop_times_by_stops;
+    std::vector<StopID> stops = route.stops;
     if (stop_times.size() != stops.size()) {
         return false; // Departure time must be given to all stops in route.
     }
@@ -731,22 +725,21 @@ bool Datastructures::add_trip(RouteID routeid, std::vector<Time> const& stop_tim
     // Add departure time to each stop property.
     auto it1 = stops.begin();
     auto it2 = stop_times.begin();
-    auto it3 = time_stops.begin();
     while (true) {
         stops_map_[*it1].time_tables[routeid].insert(*it2);
-        it3->insert(*it2);
         if (it1 != stops.end() - 1) {
-            connections_.push_back({routeid, *it1, *(it1+1), *it2, *(it2+1)});
+            // connections_.push_back({routeid, *it1, *(it1+1), *it2, *(it2+1)});
+            Connection new_connection = {counter_, routeid, (*it1), (*(it1+1)), (*it2), (*(it2+1))};
+            connections_dep_.insert({*it2,new_connection});
+            connections_id_[counter_] = new_connection;
+            counter_++;
         }
         it1++;
         it2++;
-        it3++;
         if (it1 == stops.end()) {
             break;
         }
-    }
-    std::sort(connections_.begin(), connections_.end(),
-              [](Connection c1, Connection c2) { return c1.departure < c2.departure; });
+    }    
     return true;
 }
 
@@ -786,8 +779,9 @@ std::vector<std::tuple<StopID, RouteID, Time>> Datastructures::journey_earliest_
     if (!existStop(fromstop) || !existStop(tostop)) {
         return {{NO_STOP, NO_ROUTE, NO_TIME}};
     }
+    // std::sort(connections_.begin(), connections_.end(), [](Connection c1, Connection c2) { return c1.departure < c2.departure; });
     std::unordered_map<StopID, Time> earliest_arrival = {};
-    std::unordered_map<StopID, unsigned int> in_connection = {};
+    std::unordered_map<StopID, int> in_connection = {};
     for (auto& stopid : all_stops_) {
         earliest_arrival[stopid] = MAX_VALUE;
         in_connection[stopid] = MAX_VALUE;
@@ -796,13 +790,15 @@ std::vector<std::tuple<StopID, RouteID, Time>> Datastructures::journey_earliest_
     Time earliest = MAX_VALUE;
 
     // Loop through all connections
-    for (unsigned int pos = 0; pos < connections_.size(); pos++) {
-        Connection connection = *(connections_.begin()+pos);
+//    for (unsigned int pos = 0; pos < connections_.size(); pos++) {
+//        Connection connection = *(connections_.begin()+pos);
+    for (auto pair : connections_dep_) {
+        Connection connection = connections_id_[pair.second.id];
 
-        if (connection.departure >= earliest_arrival[connection.fromstop]
+        if (connection.departure >= earliest_arrival[(connection.fromstop)]
             && connection.arrrival < earliest_arrival[connection.tostop]) {
             earliest_arrival[connection.tostop] = connection.arrrival;
-            in_connection[connection.tostop] = pos;
+            in_connection[connection.tostop] = pair.second.id;
 
             if (connection.tostop == tostop) {
                 earliest = std::min(earliest, connection.arrrival);
@@ -819,7 +815,8 @@ std::vector<std::tuple<StopID, RouteID, Time>> Datastructures::journey_earliest_
         std::vector<Connection> route = {};
         unsigned int last_connection_pos = in_connection[tostop];
         while (last_connection_pos != MAX_VALUE) {
-            Connection cur_connection = *(connections_.begin()+last_connection_pos);
+            // Connection cur_connection = *(connections_.begin()+last_connection_pos);
+            Connection cur_connection = connections_id_[last_connection_pos];
             route.push_back(cur_connection);
             last_connection_pos = in_connection[cur_connection.fromstop];
         }

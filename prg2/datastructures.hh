@@ -106,14 +106,15 @@ struct Region
 struct Route
 {
     std::vector<StopID> stops;
-    std::vector<int> trips;
-    std::vector<std::set<Time>> stop_times_by_stops;
 };
 
 struct Connection {
+    int id;
     RouteID routeid;
-    StopID fromstop, tostop;
-    Time departure, arrrival;
+    StopID fromstop;
+    StopID tostop;
+    Time departure;
+    Time arrrival;
 };
 
 
@@ -285,14 +286,15 @@ public:
 
 private:
     // Add stuff needed for your class implementation here
-    std::vector<StopID> all_stops_ = {};
-    std::vector<Connection> connections_ = {};
+    int counter_ = 0;
+    std::vector<StopID> all_stops_ = {};    
     std::unordered_map<StopID, Stop> stops_map_ = {};
     std::multimap<Name, StopID> names_map_ = {};
     std::multimap<int, StopID> distance_map_ = {};
     std::unordered_map<RegionID, Region> regions_map_ = {};
     std::unordered_map<RouteID, Route> routes_map_ = {};
-    std::unordered_map<StopID, bool> visited_map_ = {};
+    std::multimap<Time, Connection> connections_dep_ = {};
+    std::unordered_map<int, Connection> connections_id_ = {};
     bool existStop(StopID id);
     bool existRegion(RegionID id);
     bool existRoute(RouteID id);
