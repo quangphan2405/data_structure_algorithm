@@ -28,11 +28,9 @@ using Name = std::string;
 RouteID const NO_ROUTE = "!!NO_ROUTE!!";
 StopID const NO_STOP = -1;
 RegionID const NO_REGION = "!!NO_REGION!!";
-enum COLOR {white, black};
 
 // Return value for cases where integer values were not found
 int const NO_VALUE = std::numeric_limits<int>::min();
-int const MAX_VALUE = std::numeric_limits<int>::max();
 
 // Return value for cases where name values were not found
 Name const NO_NAME = "!!NO_NAME!!";
@@ -82,8 +80,8 @@ using Distance = int;
 Distance const NO_DISTANCE = NO_VALUE;
 
 // Developer defined constant
-int const MAX = std::numeric_limits<int>::max();
-int const NO_TRIP = -1;
+int const MAX_VALUE = std::numeric_limits<int>::max();
+int const NO_CONNECTION = -1;
 
 struct Stop
 {
@@ -92,7 +90,6 @@ struct Stop
     RegionID parent;
     std::unordered_map<RouteID, std::pair<StopID, StopID>> routes;
     std::unordered_map<RouteID, std::set<Time>> time_tables;
-    bool visited;
 };
 
 struct Region
@@ -117,6 +114,30 @@ struct Connection {
     Time arrrival;
 };
 
+// Compare two connections.
+inline bool operator==(const Connection& lhs, const Connection& rhs)
+{
+    return lhs.id == rhs.id &&
+           lhs.routeid == rhs.routeid &&
+           lhs.fromstop == rhs.fromstop &&
+           lhs.tostop == rhs.tostop &&
+           lhs.departure == rhs.departure &&
+           lhs.arrrival == rhs.arrrival;
+}
+
+// Short name for types
+using stops_vec    = std::vector<StopID>;
+using regions_vec  = std::vector<RegionID>;
+using routes_vec   = std::vector<RouteID>;
+using name_pair    = std::pair<StopID, Name>;
+using coord_pair   = std::pair<StopID, Coord>;
+using stop_pair    = std::pair<StopID, Stop>;
+using queue_list   = std::list<StopID>;
+using parent_map   = std::unordered_map<StopID, std::pair<RouteID, StopID>>;
+using path_vec     = std::vector<std::pair<RouteID, StopID>>;
+using return_tuple = std::vector<std::tuple<StopID, RouteID, Distance>>;
+
+
 
 // This is the class you are supposed to implement
 
@@ -126,107 +147,116 @@ public:
     Datastructures();
     ~Datastructures();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(1).
+    // Short rationale for estimate: const time for size() method.
     int stop_count();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n).
+    // Short rationale for estimate: linear in the size of map for clear() method.
     void clear_all();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: traverse through n elements of a map.
     std::vector<StopID> all_stops();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(log n)
+    // Short rationale for estimate: map [] operator and multimap::insert() method.
     bool add_stop(StopID id, Name const& name, Coord xy);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(log n) ~ θ(1)
+    // Short rationale for estimate: map [] operator.
     Name get_stop_name(StopID id);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(log n) ~ θ(1)
+    // Short rationale for estimate: map [] operator.
     Coord get_stop_coord(StopID id);
 
     // We recommend you implement the operations below only after implementing the ones above
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: traverse through n elements of a multimap.
     std::vector<StopID> stops_alphabetically();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n log n)
+    // Short rationale for estimate: std::sort complexity.
     std::vector<StopID> stops_coord_order();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n) ~ θ(1)
+    // Short rationale for estimate: Worst case happens RARELY when all stops
+    // have the same coordinates.
     StopID min_coord();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n) ~ θ(1)
+    // Short rationale for estimate: Worst case happens RARELY when all stops
+    // have the same coordinates.
     StopID max_coord();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n) ~ θ(log n)
+    // Short rationale for estimate: Worst case happens RARELY when all stops
+    // have the same name. On average, the complexity of equal_range is O(log n).
     std::vector<StopID> find_stops(Name const& name);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n) ~ θ(1)
+    // Short rationale for estimate: Worst case is n when all stops have same
+    // name but on average it is constant time.
     bool change_stop_name(StopID id, Name const& newname);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n) ~ θ(1)
+    // Short rationale for estimate: Worst case is n when all stops have same
+    // coord but on average, it is constant time.
     bool change_stop_coord(StopID id, Coord newcoord);
 
     // We recommend you implement the operations below only after implementing the ones above
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(log n)
+    // Short rationale for estimate: map [] operator.
     bool add_region(RegionID id, Name const& name);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(log n)
+    // Short rationale for estimate: map [] operator.
     Name get_region_name(RegionID id);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: traverse through n elements of a map.
     std::vector<RegionID> all_regions();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: std::find complexity is at most n.
     bool add_stop_to_region(StopID id, RegionID parentid);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: std::find complexity is at most n.
     bool add_subregion_to_region(RegionID id, RegionID parentid);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n) ~ θ(1)
+    // Short rationale for estimate: Worst case happen RARELY when we are going
+    // from the leaf to the root and there are n regions in total.
     std::vector<RegionID> stop_regions(StopID id);
 
     // Non-compulsory operations
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Θ(1)
+    // Short rationale for estimate: left empty.
     void creation_finished();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: get_stops_fromRegion results in n,
+    // same for loops and std::min(max)_element.
     std::pair<Coord, Coord> region_bounding_box(RegionID id);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n log n)
+    // Short rationale for estimate: std::sort complexity.
     std::vector<StopID> stops_closest_to(StopID id);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n) ~ Θ(log n)
+    // Short rationale for estimate: Worst case is n when going from leaf to root,
+    // but on average it is log n for equal_range().
     bool remove_stop(StopID id);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n) ~ Θ(log n)
+    // Short rationale for estimate: at most n for std::find_first_of and two while loops.
     RegionID stops_common_region(StopID id1, StopID id2);
+
 
     // Phase 2 operations
 
@@ -287,7 +317,7 @@ public:
 private:
     // Add stuff needed for your class implementation here
     int counter_ = 0;
-    std::vector<StopID> all_stops_ = {};    
+    stops_vec all_stops_ = {};
     std::unordered_map<StopID, Stop> stops_map_ = {};
     std::multimap<Name, StopID> names_map_ = {};
     std::multimap<int, StopID> distance_map_ = {};
@@ -298,14 +328,16 @@ private:
     bool existStop(StopID id);
     bool existRegion(RegionID id);
     bool existRoute(RouteID id);
-    void get_stops_fromRegion(Region &cur_region, std::vector<StopID> &stops);
+    void get_stops_fromRegion(Region &cur_region, stops_vec &stops);
     bool compCoord(Coord c1, Coord c2, Coord root);
     Distance getDistance(StopID fromstop, StopID tostop);
-    StopID isIntersecting(std::vector<StopID> *s_visited, std::vector<StopID> *t_visited);
-    void BFS(std::list<StopID> *queue, std::vector<StopID> *visited, std::unordered_map<StopID, std::pair<RouteID, StopID>> *parent, bool flow);
-    bool DFS(std::vector<StopID> *visited, std::unordered_map<StopID, std::pair<RouteID, StopID>> *parent, StopID cur_stop, std::tuple<RouteID, StopID, StopID> *return_pair);
-    std::vector<std::pair<RouteID, StopID>> bidirPath(std::unordered_map<StopID, std::pair<RouteID, StopID>> *s_parent, std::unordered_map<StopID, std::pair<RouteID, StopID>> *t_parent, StopID fromstop, StopID tostop, StopID intersectNode);
-    std::vector<std::tuple<StopID, RouteID, Distance>> getTuple(std::vector<std::pair<RouteID, StopID>> *path);
+    StopID isIntersecting(stops_vec *s_visited, stops_vec *t_visited);
+    void BFS(queue_list *queue, stops_vec *visited, parent_map *parent, bool flow);
+    bool DFS(stops_vec *visited, parent_map *parent, StopID cur_stop,
+             std::tuple<RouteID, StopID, StopID> *return_pair);
+    path_vec bidirPath(parent_map *s_parent, parent_map *t_parent,
+                       StopID fromstop, StopID tostop, StopID intersectNode);
+    return_tuple getTuple(path_vec *path);
 };
 
 #endif // DATASTRUCTURES_HH
