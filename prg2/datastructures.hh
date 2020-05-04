@@ -295,11 +295,11 @@ public:
     std::vector<std::tuple<StopID, RouteID, Distance>> journey_with_cycle(StopID fromstop);
 
     // Estimate of performance: O(n log n)
-    // Short rationale for estimate: loop through all routes through cur_stop (n) and push (log n)
+    // Short rationale for estimate: loop through all routes through cur_stop (n) and push (log n).
     std::vector<std::tuple<StopID, RouteID, Distance>> journey_shortest_distance(StopID fromstop, StopID tostop);
 
     // Estimate of performance: O(m log n) ~ Θ(log n)
-    // Short rationale for estimate: map [] operator in m times (size of stop_times)
+    // Short rationale for estimate: map [] operator in m times (size of stop_times).
     bool add_trip(RouteID routeid, const std::vector<Time> &stop_times);
 
     // Estimate of performance: O(n)
@@ -310,8 +310,8 @@ public:
     // Short rationale for estimate: n elements, each has map [] operator (log n).
     std::vector<std::tuple<StopID, RouteID, Time>> journey_earliest_arrival(StopID fromstop, StopID tostop, Time starttime);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(1)
+    // Short rationale for estimate: left empty.
     void add_walking_connections(); // Note! This method is completely optional, and not part of any testing
 
 private:
