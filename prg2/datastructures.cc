@@ -661,7 +661,8 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_short
     std::unordered_map<StopID, Distance> distances = {}; // g score for each stop.
     std::unordered_map<StopID, Distance> f_scores = {}; // f = g + h.
     // A priority queue to save StopID base on f score using a cmp lambda function.
-    std::priority_queue<StopID, std::vector<StopID>, > frontier;
+    typedef std::pair<Distance, StopID> queue_pair;
+    std::priority_queue<queue_pair, std::vector<queue_pair>, std::greater<queue_pair>> frontier;
 
     for (auto stopid : all_stops_) {
         distances[stopid] = MAX; // Initiate g score with infinity.
@@ -669,11 +670,11 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_short
     // Statistics for starting point.
     distances[fromstop] = 0;
     f_scores[fromstop] = getDistance(fromstop, tostop);
-    // frontier.push(fromstop);
+    frontier.push({getDistance(fromstop, tostop), fromstop});
 
 
     while (!frontier.empty()) {
-        StopID cur_stop = frontier.top();
+        StopID cur_stop = frontier.top().second;
         frontier.pop();
 
         if (cur_stop == tostop) {
@@ -690,7 +691,7 @@ std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_short
             if (new_dist < distances[next_stop]) {
                 distances[next_stop] = new_dist; // New h score for next_stop.
                 f_scores[next_stop] = priority; // New f score for next_stop.
-                frontier.push(next_stop);
+                frontier.push({priority, next_stop});
                 parent[next_stop] = {pair.first, cur_stop};
             }
         }
