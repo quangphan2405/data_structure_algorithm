@@ -606,7 +606,7 @@ return_tuple Datastructures::journey_least_stops(StopID fromstop, StopID tostop)
     return {{NO_STOP, NO_ROUTE, NO_DISTANCE}}; // No route has been found.
 }
 
-std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_with_cycle(StopID fromstop)
+return_tuple Datastructures::journey_with_cycle(StopID fromstop)
 {
     if (!existStop(fromstop)) {
         return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
@@ -656,7 +656,8 @@ return_tuple Datastructures::journey_shortest_distance(StopID fromstop, StopID t
     std::unordered_map<StopID, Distance> distances = {}; // g score for each stop.
     // A priority queue to save StopID based on its f score.
     typedef std::pair<Distance, StopID> queue_pair;
-    std::priority_queue<queue_pair, std::vector<queue_pair>, std::greater<queue_pair>> frontier;
+    std::priority_queue<queue_pair, std::vector<queue_pair>,
+                        std::greater<queue_pair>> frontier;
 
     for (auto stopid : all_stops_) {
         distances[stopid] = MAX_VALUE; // Initiate g score with infinity.
@@ -800,7 +801,7 @@ return_tuple Datastructures::journey_earliest_arrival(StopID fromstop, StopID to
             // Get this connection id.
             in_connection[connection.tostop] = pair.second.id;
 
-            // If we manage to arrive, get our earliest.
+            // If we manage to arrive, get our earliest time.
             // This is a criterion for exiting the loop.
             if (connection.tostop == tostop) {
                 earliest = std::min(earliest, connection.arrrival);
@@ -825,7 +826,7 @@ return_tuple Datastructures::journey_earliest_arrival(StopID fromstop, StopID to
         std::reverse(route.begin(), route.end());
 
         // Get return vector from the path.
-        std::vector<std::tuple<StopID, RouteID, Time>> return_vec = {};        
+        return_tuple return_vec = {};
         for (auto it = route.begin(); it != route.end(); it++) {
             return_vec.push_back({it->fromstop, it->routeid, it->departure});
         }
@@ -912,7 +913,7 @@ StopID Datastructures::isIntersecting(stops_vec *fw_visited, stops_vec *bw_visit
 };
 
 void Datastructures::BFS(std::list<StopID> *queue, stops_vec *visited, parent_map *parent, bool flow) {
-    // flow -> forward, not flow -> backward.
+    // flow -> forward search, not flow -> backward search.
     // Retrieve first item from queue.
     StopID current = queue->front();
     queue->pop_front();

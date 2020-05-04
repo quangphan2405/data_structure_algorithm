@@ -260,54 +260,54 @@ public:
 
     // Phase 2 operations
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(log n)
+    // Short rationale for estimate: map [] operator.
     std::vector<RouteID> all_routes();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(log n)
+    // Short rationale for estimate: map [] operator.
     bool add_route(RouteID id, std::vector<StopID> stops);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(log n)
+    // Short rationale for estimate: map [] operator.
     std::vector<std::pair<RouteID, StopID>> routes_from(StopID stopid);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(log n)
+    // Short rationale for estimate: map [] operator.
     std::vector<StopID> route_stops(RouteID id);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: linear in the size of map for clear() method.
     void clear_routes();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n^2) ~ Θ(n log n)
+    // Short rationale for estimate: RARELY at most n^2 for std::find_first_of, on average n log n.
     std::vector<std::tuple<StopID, RouteID, Distance>> journey_any(StopID fromstop, StopID tostop);
 
 //    // Non-compulsory operations
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n^2) ~ Θ(n log n)
+    // Short rationale for estimate: RARELY at most n^2 for std::find_first_of, on average n log n.
     std::vector<std::tuple<StopID, RouteID, Distance>> journey_least_stops(StopID fromstop, StopID tostop);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: DFS through all stops.
     std::vector<std::tuple<StopID, RouteID, Distance>> journey_with_cycle(StopID fromstop);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n log n)
+    // Short rationale for estimate: loop through all routes through cur_stop (n) and push (log n)
     std::vector<std::tuple<StopID, RouteID, Distance>> journey_shortest_distance(StopID fromstop, StopID tostop);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(m log n) ~ Θ(log n)
+    // Short rationale for estimate: map [] operator in m times (size of stop_times)
     bool add_trip(RouteID routeid, const std::vector<Time> &stop_times);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: n trips in the timetable.
     std::vector<std::pair<Time, Duration> > route_times_from(RouteID routeid, StopID stopid);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n log n)
+    // Short rationale for estimate: n elements, each has map [] operator (log n).
     std::vector<std::tuple<StopID, RouteID, Time>> journey_earliest_arrival(StopID fromstop, StopID tostop, Time starttime);
 
     // Estimate of performance:
